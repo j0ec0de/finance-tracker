@@ -4,8 +4,7 @@ import * as usersController from './users.controller.js';
 
 export const usersRouter = Router();
 
-usersRouter.get('/', asyncHandler(usersController.list));
-usersRouter.get('/:id', asyncHandler(usersController.getOne));
-usersRouter.post('/', asyncHandler(usersController.create));
-usersRouter.patch('/:id', asyncHandler(usersController.update));
-usersRouter.delete('/:id', asyncHandler(usersController.remove));
+// Users can only act on their own account; there is no cross-user listing or lookup.
+usersRouter.get('/me', asyncHandler(usersController.me));
+usersRouter.patch('/me', asyncHandler(usersController.update));
+usersRouter.delete('/me', asyncHandler(usersController.remove));

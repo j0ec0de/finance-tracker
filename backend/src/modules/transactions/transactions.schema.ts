@@ -3,7 +3,6 @@ import { z } from 'zod';
 const transactionTypes = ['expense', 'income'] as const;
 
 export const createTransactionSchema = z.object({
-  userId: z.coerce.number().int().positive(),
   accountId: z.coerce.number().int().positive(),
   categoryId: z.coerce.number().int().positive().optional(),
   type: z.enum(transactionTypes),
@@ -12,10 +11,9 @@ export const createTransactionSchema = z.object({
   occurredAt: z.coerce.date().optional(),
 });
 
-export const updateTransactionSchema = createTransactionSchema.omit({ userId: true }).partial();
+export const updateTransactionSchema = createTransactionSchema.partial();
 
 export const listTransactionsQuerySchema = z.object({
-  userId: z.coerce.number().int().positive().optional(),
   accountId: z.coerce.number().int().positive().optional(),
   categoryId: z.coerce.number().int().positive().optional(),
   type: z.enum(transactionTypes).optional(),
