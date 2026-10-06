@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import cors from 'cors';
 import express from 'express';
 import type { Request, Response } from 'express';
 import { sql } from 'drizzle-orm';
@@ -9,6 +10,11 @@ import { apiRouter } from './routes/index.js';
 const app = express();
 const port = process.env.PORT || 3000;
 
+const corsOrigins = (process.env.CORS_ORIGINS || 'http://localhost:5173')
+  .split(',')
+  .map((origin) => origin.trim());
+
+app.use(cors({ origin: corsOrigins }));
 app.use(express.json());
 
 app.get("/health", async (req: Request, res: Response) => {

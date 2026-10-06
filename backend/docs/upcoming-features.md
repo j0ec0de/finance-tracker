@@ -21,10 +21,10 @@ Status legend: **Done** — merged into the working tree and verified. **Next** 
 - `PATCH /api/accounts/:id` no longer accepts `balance`. Balance changes only through transactions.
 - `balance` on `POST /api/accounts` stays as an opening balance (defaults to 0).
 
-## Next
-
 ### 4. CORS
-No CORS middleware is configured, so a browser frontend on another origin is blocked. Add the `cors` package with the frontend origin, or proxy `/api` through the frontend dev server. Pick one (see open decisions).
+- `cors` middleware added in `src/index.ts`. Allowed origins come from `CORS_ORIGINS` (comma-separated), defaulting to `http://localhost:5173` (Vite dev server).
+
+## Next
 
 ### 5. Paginated transaction list
 `GET /api/transactions` returns a bare array with no total, so the UI cannot show page counts. Change the response to `{ data, total, limit, offset }`. This is a breaking change, so do it before the frontend depends on the array shape.
@@ -60,7 +60,7 @@ Tokens expire after 1 day with no refresh. Decide whether the frontend re-logs i
 
 ## Open decisions
 
-- **Frontend dev setup:** Vite proxy to `/api`, or CORS with the frontend origin?
+- **Frontend dev setup:** CORS is in place (feature 4). A Vite proxy to `/api` is still an option if the frontend would rather avoid CORS in development.
 - **Default categories:** seed on registration, or user-defined only?
 - **Transfers:** in scope for the first frontend release?
 - **Currency:** single currency for summaries, or grouped by currency?
