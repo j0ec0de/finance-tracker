@@ -17,10 +17,11 @@ Status legend: **Done** — merged into the working tree and verified. **Next** 
 - `POST /api/users` removed; sign-up stays on `POST /api/auth/register`.
 - Changing email to one already in use returns 409.
 
-## Next
-
 ### 3. Stop direct balance edits on accounts
-`PATCH /api/accounts/:id` accepts `balance`, which can drift from the transactions that should define it. Remove `balance` from the update schema. Decide whether `balance` on create stays as an opening balance.
+- `PATCH /api/accounts/:id` no longer accepts `balance`. Balance changes only through transactions.
+- `balance` on `POST /api/accounts` stays as an opening balance (defaults to 0).
+
+## Next
 
 ### 4. CORS
 No CORS middleware is configured, so a browser frontend on another origin is blocked. Add the `cors` package with the frontend origin, or proxy `/api` through the frontend dev server. Pick one (see open decisions).
@@ -60,7 +61,6 @@ Tokens expire after 1 day with no refresh. Decide whether the frontend re-logs i
 ## Open decisions
 
 - **Frontend dev setup:** Vite proxy to `/api`, or CORS with the frontend origin?
-- **Opening balance:** keep `balance` on account create as an opening balance, or derive it from an initial transaction?
 - **Default categories:** seed on registration, or user-defined only?
 - **Transfers:** in scope for the first frontend release?
 - **Currency:** single currency for summaries, or grouped by currency?

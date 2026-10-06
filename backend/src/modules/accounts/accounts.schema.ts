@@ -9,7 +9,8 @@ export const createAccountSchema = z.object({
   currency: z.string().trim().length(3).toUpperCase().default('USD'),
 });
 
-export const updateAccountSchema = createAccountSchema.partial();
+// Balance is derived from transactions after creation, so it cannot be edited directly.
+export const updateAccountSchema = createAccountSchema.omit({ balance: true }).partial();
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;

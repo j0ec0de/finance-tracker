@@ -29,7 +29,7 @@ export const createAccount = async (userId: number, input: CreateAccountInput) =
 export const updateAccount = async (userId: number, id: number, input: UpdateAccountInput) => {
   const [account] = await db
     .update(accounts)
-    .set({ ...input, balance: input.balance?.toFixed(2) })
+    .set(input)
     .where(and(eq(accounts.id, id), eq(accounts.userId, userId)))
     .returning();
   if (!account) throw new NotFoundError('Account');
