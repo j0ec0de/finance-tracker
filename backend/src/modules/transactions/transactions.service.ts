@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lte } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lte, SQL } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { transactions } from '../../db/schema.js';
 import { adjustAccountBalance, assertAccountOwned } from '../accounts/accounts.service.js';
@@ -12,21 +12,32 @@ import type {
 
 const balanceDelta = (type: 'expense' | 'income', amount: number) => (type === 'income' ? amount : -amount);
 
-export const listTransactions = async (userId: number, filters: ListTransactionsQuery) => {
+const listFilterWhere = (userId: number, filters: ListTransactionsQuery): SQL | undefined => {
   const conditions = [eq(transactions.userId, userId)];
   if (filters.accountId !== undefined) conditions.push(eq(transactions.accountId, filters.accountId));
   if (filters.categoryId !== undefined) conditions.push(eq(transactions.categoryId, filters.categoryId));
   if (filters.type !== undefined) conditions.push(eq(transactions.type, filters.type));
   if (filters.startDate !== undefined) conditions.push(gte(transactions.occurredAt, filters.startDate));
   if (filters.endDate !== undefined) conditions.push(lte(transactions.occurredAt, filters.endDate));
+  return and(...conditions);
+};
 
-  return db
-    .select()
-    .from(transactions)
-    .where(and(...conditions))
-    .orderBy(desc(transactions.occurredAt))
-    .limit(filters.limit)
-    .offset(filters.offset);
+export const listTransactions = async (userId: number, filters: ListTransactionsQuery) => {
+  const where = listFilterWhere(userId, filters);
+
+  const [data, [totalRow]] = await Promise.all([
+    db
+      .select()
+      .from(transactions)
+      .where(where)
+      // id breaks ties so pages don't overlap when several rows share a date.
+      .orderBy(desc(transactions.occurredAt), desc(transactions.id))
+      .limit(filters.limit)
+      .offset(filters.offset),
+    db.select({ total: count() }).from(transactions).where(where),
+  ]);
+
+  return { data, total: totalRow?.total ?? 0 };
 };
 
 export const getTransactionById = async (userId: number, id: number) => {

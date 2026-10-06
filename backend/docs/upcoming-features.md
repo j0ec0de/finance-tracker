@@ -24,10 +24,11 @@ Status legend: **Done** — merged into the working tree and verified. **Next** 
 ### 4. CORS
 - `cors` middleware added in `src/index.ts`. Allowed origins come from `CORS_ORIGINS` (comma-separated), defaulting to `http://localhost:5173` (Vite dev server).
 
-## Next
-
 ### 5. Paginated transaction list
-`GET /api/transactions` returns a bare array with no total, so the UI cannot show page counts. Change the response to `{ data, total, limit, offset }`. This is a breaking change, so do it before the frontend depends on the array shape.
+- `GET /api/transactions` returns `{ data, total, limit, offset }`. `total` counts all rows matching the same filters, not just the page.
+- Rows are ordered by `occurredAt` then `id`, so pages stay stable when several transactions share a date.
+
+## Next
 
 ### 6. Summary endpoints
 - `GET /api/transactions/summary?startDate&endDate` — income, expense, and net totals for the period.

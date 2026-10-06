@@ -10,8 +10,8 @@ import {
 
 export const list = async (req: Request, res: Response) => {
   const filters = listTransactionsQuerySchema.parse(req.query);
-  const transactions = await transactionsService.listTransactions(getCurrentUserId(req), filters);
-  res.json(transactions);
+  const { data, total } = await transactionsService.listTransactions(getCurrentUserId(req), filters);
+  res.json({ data, total, limit: filters.limit, offset: filters.offset });
 };
 
 export const getOne = async (req: Request, res: Response) => {
