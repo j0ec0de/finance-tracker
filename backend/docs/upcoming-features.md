@@ -28,6 +28,10 @@ Status legend: **Done** — merged into the working tree and verified. **Next** 
 - `GET /api/transactions` returns `{ data, total, limit, offset }`. `total` counts all rows matching the same filters, not just the page.
 - Rows are ordered by `occurredAt` then `id`, so pages stay stable when several transactions share a date.
 
+### 7. Clear errors for bad references
+- Ids above Postgres's `integer` max (2147483647) return 400 from Zod instead of failing in the database. Applies to path params and to `accountId`/`categoryId` in transaction bodies and filters.
+- A Postgres foreign-key violation (`23503`) maps to 400 `Referenced account or category does not exist`. Ownership checks catch most bad references first (404); this covers a referenced row removed mid-request.
+
 ## Next
 
 ### 6. Summary endpoints
@@ -35,9 +39,6 @@ Status legend: **Done** — merged into the working tree and verified. **Next** 
 - `GET /api/transactions/by-category?startDate&endDate` — totals per category for the period.
 
 Net worth can be the sum of account balances on the client.
-
-### 7. Clear errors for bad references
-A foreign-key violation or invalid id currently surfaces as a 500. Map Postgres foreign-key errors to 400 or 404 with a clear message.
 
 ### 8. Tests for the balance logic
 There is no test suite. Add tests for account balance changes on create, edit (including moving a transaction to another account or changing its amount or type), and delete, before refactoring further.
