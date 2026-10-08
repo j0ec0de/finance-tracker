@@ -34,6 +34,15 @@ Don't introduce gradients, glassmorphism, or glow. Surfaces are flat;
 separation comes from `ring-1 ring-foreground/10` (cards) or `border`
 (header, inputs), not shadows.
 
+**Exception — auth screens.** `AuthBrandPanel` (login/register) deliberately
+breaks from flat/static: it layers an animated grid pan and three blurred,
+slowly-drifting `chart-*` color blobs (`auth-blob-1/2/3`, `auth-grid-pan`
+keyframes in `index.css`) over the `bg-primary` panel, and the form card
+animates in (`animate-in fade-in slide-in-from-*`, via `tw-animate-css`).
+This is scoped to the pre-auth moment only — don't carry blobs/motion into
+the dashboard or any in-app screen, which stay flat and static. All
+animation respects `prefers-reduced-motion`.
+
 ## Typography
 
 - Font: Geist Variable (`@fontsource-variable/geist`), via

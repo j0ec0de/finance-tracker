@@ -4,9 +4,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-A personal finance tracker. Currently only the `backend/` (Express + TypeScript API) exists; there is no frontend yet.
+A personal finance tracker ("Finch") in two parts:
 
-## Commands
+- `backend/` — Express 5 + TypeScript API over Postgres (Drizzle ORM)
+- `frontend/` — React 19 + TypeScript SPA (Vite, Tailwind CSS v4, shadcn/ui)
+
+Two other instruction files apply and should be read before working on the frontend:
+`AGENTS.md` (repo root — frontend development rules: stack, architecture, UX and code-quality
+expectations) and `frontend/DESIGN.md` (the established design system — tokens, typography,
+spacing, component conventions). `backend/docs/upcoming-features.md` tracks planned work.
+
+---
+
+# Backend
 
 All commands are run from `backend/`.
 
@@ -18,11 +28,16 @@ All commands are run from `backend/`.
 
 There is no test suite, lint command, or build step configured yet.
 
-Required env vars (see `backend/.env.example`): `PORT`, `DATABASE_URL` (Postgres), `JWT_SECRET`, `JWT_EXPIRES_IN`.
+Required env vars (see `backend/.env.example`): `PORT`, `DATABASE_URL` (Postgres), `JWT_SECRET`,
+`JWT_EXPIRES_IN`, `CORS_ORIGINS` (comma-separated allowed origins; defaults to the Vite dev server
+at `http://localhost:5173`).
 
 ## Architecture
 
-Express 5 app (`src/index.ts`) mounts a single `apiRouter` (`src/routes/index.ts`) under `/api`. Every resource router except `/auth` is wrapped with `requireAuth` at the mount point in `routes/index.ts`, not inside the individual module routers.
+Express 5 app (`src/index.ts`) enables `cors` for `CORS_ORIGINS`, exposes an unauthenticated
+`/health` check (runs `select 1` against the DB), and mounts a single `apiRouter`
+(`src/routes/index.ts`) under `/api`. Every resource router except `/auth` is wrapped with
+`requireAuth` at the mount point in `routes/index.ts`, not inside the individual module routers.
 
 **Module layout** — each resource under `src/modules/<name>/` follows the same four-file split:
 - `*.routes.ts` — maps HTTP verbs to controller functions, wraps each in `asyncHandler`
@@ -32,10 +47,93 @@ Express 5 app (`src/index.ts`) mounts a single `apiRouter` (`src/routes/index.ts
 
 Existing modules: `auth`, `users`, `accounts`, `categories`, `transactions`. New resources should follow this exact structure.
 
-**Error handling**: services/controllers throw; nothing is caught locally. `asyncHandler` (`src/utils/async-handler.ts`) forwards rejected promises to `next()`. The global `errorHandler` (`src/middleware/error-handler.ts`, registered last in `index.ts`) turns `ZodError` into 400s, `AppError` subclasses (`src/utils/app-error.ts`: `NotFoundError`, `UnauthorizedError`, `ConflictError`) into their status code, and anything else into a logged 500.
+**Error handling**: services/controllers throw; nothing is caught locally. `asyncHandler`
+(`src/utils/async-handler.ts`) forwards rejected promises to `next()`. The global `errorHandler`
+(`src/middleware/error-handler.ts`, registered last in `index.ts`) turns `ZodError` into 400s,
+`AppError` subclasses (`src/utils/app-error.ts`: `NotFoundError`, `UnauthorizedError`,
+`ConflictError`) into their status code, a Postgres foreign-key violation (`23503`, read off the
+error or its `cause` since Drizzle wraps driver errors) into a 400, and anything else into a
+logged 500.
 
 **Auth**: `requireAuth` (`src/middleware/auth.ts`) reads a `Bearer` JWT, verifies it with `src/utils/jwt.ts`, and attaches `req.user = { id, email }` (typed via a global `Express.Request` augmentation in the same file). Passwords are hashed with bcrypt via `src/utils/password.ts`.
 
-**Database** (`src/db/`): Drizzle ORM over `pg`, schema in `schema.ts`, pool/client in `index.ts`. Core tables: `users` → `accounts`, `categories`, `transactions` (all FK'd to `userId`, cascade on delete). `accounts.balance` is a cached running total, not derived on read — it's kept in sync by `adjustAccountBalance` (`modules/accounts/accounts.service.ts`) whenever a transaction is created, updated, or deleted. Transaction creation/update/deletion wraps the row write and the balance adjustment in a single `db.transaction(...)` (see `modules/transactions/transactions.service.ts`) to keep them atomic — follow this pattern for any new code that touches both a transaction and its account's balance.
+**Database** (`src/db/`): Drizzle ORM over `pg`, schema in `schema.ts`, pool/client in `index.ts`.
+Core tables: `users` → `accounts`, `categories`, `transactions` (all FK'd to `userId`, cascade on
+delete). `accounts.balance` is a cached running total, not derived on read — it's set from the
+`balance` field on create and thereafter kept in sync by `adjustAccountBalance`
+(`modules/accounts/accounts.service.ts`) whenever a transaction is created, updated, or deleted.
+It is deliberately not editable through the update endpoint (`updateAccountSchema` omits it).
+Transaction creation/update/deletion wraps the row write and the balance adjustment in a single
+`db.transaction(...)` (see `modules/transactions/transactions.service.ts`) to keep them atomic —
+follow this pattern for any new code that touches both a transaction and its account's balance.
+
+Transaction listing is paginated: the query schema takes `limit` (default 50, max 200) and
+`offset` (default 0), and the service returns `{ data, total }`, with `total` from a parallel
+`count()` over the same filters. Ordering breaks ties on `id` so pages can't overlap.
 
 Migrations live in `backend/drizzle/`, generated by `drizzle-kit` per `drizzle.config.ts` (schema path, Postgres dialect, `DATABASE_URL`). Always go through `db:generate` + `db:migrate`/`db:push` rather than hand-editing SQL in `drizzle/`.
+
+---
+
+# Frontend
+
+All commands are run from `frontend/`.
+
+- `npm run dev` — Vite dev server (port 5173) with HMR
+- `npm run build` — typecheck (`tsc -b`) then production build; this is also how you typecheck
+- `npm run lint` — oxlint (`.oxlintrc.json`)
+- `npm run preview` — serve the production build
+
+There is no test suite. Env vars (see `frontend/.env.example`): `VITE_API_URL` — backend base URL
+*including* the `/api` prefix (defaults to `http://localhost:3000/api`).
+
+`@/*` resolves to `frontend/src/*` (aliased in both `vite.config.ts` and `tsconfig.json`).
+
+## Architecture
+
+**Providers** (`src/main.tsx`, outermost first): `StrictMode` → `QueryClientProvider` →
+`TooltipProvider` → `BrowserRouter` → `AuthProvider` → `App`.
+
+**Routing** (`src/App.tsx`): flat `Routes`. `/login` and `/register` are public; everything else
+nests under `ProtectedRoute` → `AppLayout`. `ProtectedRoute`
+(`src/components/layout/protected-route.tsx`) renders nothing while the session is loading, then
+redirects to `/login` with `state.from` set so the login form can return the user to where they
+were.
+
+**Layout**: `AppLayout` (`src/components/layout/app-layout.tsx`) composes `SidebarProvider` +
+`AppSidebar` + `SidebarInset` (`SiteHeader` and the routed `Outlet`). Nav entries live in one
+place, `src/components/layout/nav-items.ts`, and drive both the sidebar links and the page title
+in `SiteHeader` — add new sections there rather than hardcoding links.
+
+**Auth** (`src/hooks/use-auth.tsx`): `AuthProvider` holds `{ user, token, isLoading, login,
+register, logout }` in context. The JWT is persisted in `localStorage` under `finch.token`; on
+mount (and whenever the token changes) it calls `/auth/me` to rehydrate the user and clears the
+stored token if that fails. Read it via the `useAuth` hook; never touch `localStorage` directly.
+
+**API layer** (`src/lib/`): `api.ts` has the single `apiRequest<T>` fetch wrapper — it sets JSON
+headers, attaches `Authorization: Bearer <token>` when given one, handles 204s, and throws
+`ApiError` (with `status` and the server's `error` message) on non-2xx. Per-resource modules wrap
+it with typed functions (`auth.ts` today). Keep fetch calls out of components: add a function to a
+`src/lib/<resource>.ts` module instead.
+
+**Components**: `src/components/ui/*` is generated shadcn/ui (style `radix-nova`, base color
+`neutral`, lucide icons — see `components.json`); prefer `npx shadcn@latest add` and reuse over
+hand-rolling. Note these import `cn` from the `cn` package directly, while app code imports it
+from `@/lib/utils` (a re-export) — either is fine, match the surrounding file. Feature components
+live under `src/components/<area>/`, pages under `src/pages/`, and a multi-part page gets its own
+directory (`src/pages/dashboard/*` holds the dashboard's cards).
+
+**Forms**: hand-rolled hooks per form (`src/hooks/use-login-form.ts`, `use-register-form.ts`) own
+the field state, submit handler, `error`, and `isSubmitting`; the page component only renders.
+`react-hook-form` and `@tanstack/react-query` are installed but not used yet — Query is mounted
+with no `useQuery` call anywhere, so server state is currently fetched through the auth context
+alone.
+
+**Charts**: recharts v3 via the shadcn `ChartContainer` wrapper (`src/components/ui/chart.tsx`),
+which supplies the chart CSS variables from a `ChartConfig`. Series colors must come from
+`--chart-1` … `--chart-6`.
+
+**Current state**: the dashboard (`src/pages/dashboard-page.tsx`) is built out but renders
+hardcoded data from `src/pages/dashboard/mock-data.ts` — it is not wired to the API yet. The
+transactions, accounts, budgets, and analytics pages are `PagePlaceholder` stubs. Wiring these to
+the backend is the open work.

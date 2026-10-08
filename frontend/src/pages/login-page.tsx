@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom"
-import { ArrowRight } from "lucide-react"
+import { ArrowRight, Lock, Mail } from "lucide-react"
 
 import { useLoginForm } from "@/hooks/use-login-form"
 import { AuthBrandPanel } from "@/components/auth/auth-brand-panel"
@@ -25,9 +25,9 @@ export default function LoginPage() {
       <AuthBrandPanel />
 
       <div className="flex flex-col items-center justify-center gap-8 p-4 py-12">
-        <BrandMark className="lg:hidden" />
+        <BrandMark className="animate-in fade-in slide-in-from-top-2 duration-500 lg:hidden" />
 
-        <div className="w-full max-w-sm space-y-6">
+        <div className="w-full max-w-sm animate-in fade-in slide-in-from-bottom-4 rounded-xl bg-card p-6 ring-1 ring-foreground/10 duration-500 sm:p-8">
           <div className="space-y-1.5">
             <h1 className="text-xl font-semibold">Welcome back</h1>
             <p className="text-sm text-muted-foreground">
@@ -35,30 +35,42 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <div className="relative">
+                <Mail className="pointer-events-none absolute inset-y-0 left-2.5 my-auto size-4 text-muted-foreground" />
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="pl-8"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="password">Password</Label>
-              <PasswordInput
-                id="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+              <div className="relative">
+                <Lock className="pointer-events-none absolute inset-y-0 left-2.5 my-auto size-4 text-muted-foreground" />
+                <PasswordInput
+                  id="password"
+                  autoComplete="current-password"
+                  required
+                  className="pl-8"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
             </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && (
+              <p className="animate-in fade-in text-sm text-destructive">
+                {error}
+              </p>
+            )}
 
             <Button type="submit" className="mt-1 w-full" disabled={isSubmitting}>
               {isSubmitting ? (
