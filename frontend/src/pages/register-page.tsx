@@ -1,15 +1,9 @@
 import { Link } from "react-router-dom"
+import { ArrowRight, Lock, Mail, User } from "lucide-react"
 
 import { useRegisterForm } from "@/hooks/use-register-form"
-import { BrandMark } from "@/components/auth/brand-mark"
+import { AuthLayout } from "@/components/auth/auth-layout"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { PasswordInput } from "@/components/ui/password-input"
@@ -28,67 +22,79 @@ export default function RegisterPage() {
   } = useRegisterForm()
 
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center gap-6 p-4">
-      <BrandMark />
+    <AuthLayout
+      title="Create an account"
+      description="Start tracking your finances in minutes"
+    >
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="name">Name</Label>
+          <div className="relative">
+            <User className="pointer-events-none absolute inset-y-0 left-2.5 my-auto size-4 text-muted-foreground" />
+            <Input
+              id="name"
+              type="text"
+              autoComplete="name"
+              required
+              className="pl-8"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="email">Email</Label>
+          <div className="relative">
+            <Mail className="pointer-events-none absolute inset-y-0 left-2.5 my-auto size-4 text-muted-foreground" />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              className="pl-8"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <Label htmlFor="password">Password</Label>
+          <div className="relative">
+            <Lock className="pointer-events-none absolute inset-y-0 left-2.5 my-auto size-4 text-muted-foreground" />
+            <PasswordInput
+              id="password"
+              autoComplete="new-password"
+              required
+              minLength={8}
+              className="pl-8"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+        </div>
 
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Create an account</CardTitle>
-          <CardDescription>
-            Start tracking your finances in minutes
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                type="text"
-                autoComplete="name"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="password">Password</Label>
-              <PasswordInput
-                id="password"
-                autoComplete="new-password"
-                required
-                minLength={8}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+        {error && (
+          <p className="animate-in fade-in text-sm text-destructive">{error}</p>
+        )}
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" className="mt-1 w-full" disabled={isSubmitting}>
+          {isSubmitting ? (
+            "Creating account..."
+          ) : (
+            <>
+              Create account
+              <ArrowRight data-icon="inline-end" />
+            </>
+          )}
+        </Button>
 
-            <Button type="submit" className="mt-1 w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Creating account..." : "Create account"}
-            </Button>
-
-            <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        <p className="text-center text-sm text-muted-foreground">
+          Already have an account?{" "}
+          <Link to="/login" className="font-medium text-foreground underline-offset-4 hover:underline">
+            Sign in
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
   )
 }
