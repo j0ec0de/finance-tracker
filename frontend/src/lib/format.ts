@@ -1,9 +1,18 @@
-const currencyFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-  maximumFractionDigits: 0,
-})
+const formatters = new Map<string, Intl.NumberFormat>()
 
-export function formatCurrency(value: number) {
-  return currencyFormatter.format(value)
+function getFormatter(currency: string) {
+  let formatter = formatters.get(currency)
+  if (!formatter) {
+    formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 0,
+    })
+    formatters.set(currency, formatter)
+  }
+  return formatter
+}
+
+export function formatCurrency(value: number, currency = "USD") {
+  return getFormatter(currency).format(value)
 }
