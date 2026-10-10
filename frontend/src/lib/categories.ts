@@ -21,8 +21,24 @@ export type CreateCategoryInput = {
   color?: string
 }
 
+export type UpdateCategoryInput = Partial<CreateCategoryInput>
+
 export const listCategories = (token: string) =>
   apiRequest<Category[]>("/categories", { token })
 
 export const createCategory = (token: string, input: CreateCategoryInput) =>
   apiRequest<Category>("/categories", { method: "POST", body: input, token })
+
+export const updateCategory = (
+  token: string,
+  id: number,
+  input: UpdateCategoryInput
+) =>
+  apiRequest<Category>(`/categories/${id}`, {
+    method: "PATCH",
+    body: input,
+    token,
+  })
+
+export const deleteCategory = (token: string, id: number) =>
+  apiRequest<null>(`/categories/${id}`, { method: "DELETE", token })
