@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth"
 import * as accountsApi from "@/lib/accounts"
 import type { CreateAccountInput, UpdateAccountInput } from "@/lib/accounts"
 
-const accountsKey = ["accounts"] as const
+export const accountsKey = ["accounts"] as const
 
 export function useAccounts() {
   const { token } = useAuth()
