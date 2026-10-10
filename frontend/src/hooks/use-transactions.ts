@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/use-auth"
 import * as transactionsApi from "@/lib/transactions"
 import type {
   CreateTransactionInput,
+  DateRangeParams,
   ListTransactionsParams,
   UpdateTransactionInput,
 } from "@/lib/transactions"
@@ -18,6 +19,26 @@ export function useTransactions(params: ListTransactionsParams) {
   return useQuery({
     queryKey: transactionsKey(params),
     queryFn: () => transactionsApi.listTransactions(token!, params),
+    enabled: !!token,
+  })
+}
+
+export function useTransactionsSummary(params: DateRangeParams = {}) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: ["transactions", "summary", params] as const,
+    queryFn: () => transactionsApi.getTransactionsSummary(token!, params),
+    enabled: !!token,
+  })
+}
+
+export function useTransactionsByCategory(params: DateRangeParams = {}) {
+  const { token } = useAuth()
+
+  return useQuery({
+    queryKey: ["transactions", "by-category", params] as const,
+    queryFn: () => transactionsApi.getTransactionsByCategory(token!, params),
     enabled: !!token,
   })
 }

@@ -44,7 +44,25 @@ export type ListTransactionsResult = {
   offset: number
 }
 
-function buildQuery(params: ListTransactionsParams) {
+export type DateRangeParams = {
+  startDate?: string
+  endDate?: string
+}
+
+export type TransactionsSummary = {
+  income: number
+  expense: number
+  net: number
+}
+
+export type CategoryTotal = {
+  categoryId: number | null
+  categoryName: string
+  type: TransactionType
+  total: number
+}
+
+function buildQuery(params: Record<string, string | number | undefined>) {
   const query = new URLSearchParams()
   for (const [key, value] of Object.entries(params)) {
     if (value !== undefined) query.set(key, String(value))
@@ -74,3 +92,17 @@ export const updateTransaction = (
 
 export const deleteTransaction = (token: string, id: number) =>
   apiRequest<null>(`/transactions/${id}`, { method: "DELETE", token })
+
+export const getTransactionsSummary = (
+  token: string,
+  params: DateRangeParams = {}
+) => apiRequest<TransactionsSummary>(`/transactions/summary${buildQuery(params)}`, { token })
+
+export const getTransactionsByCategory = (
+  token: string,
+  params: DateRangeParams = {}
+) =>
+  apiRequest<{ data: CategoryTotal[] }>(
+    `/transactions/by-category${buildQuery(params)}`,
+    { token }
+  )

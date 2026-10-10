@@ -24,6 +24,12 @@ export const listTransactionsQuerySchema = z.object({
   offset: z.coerce.number().int().nonnegative().default(0),
 });
 
+export const summaryQuerySchema = z.object({
+  startDate: z.coerce.date().optional(),
+  endDate: z.coerce.date().optional(),
+});
+
 export type CreateTransactionInput = z.infer<typeof createTransactionSchema>;
 export type UpdateTransactionInput = z.infer<typeof updateTransactionSchema>;
 export type ListTransactionsQuery = z.infer<typeof listTransactionsQuerySchema>;
+export type SummaryQuery = z.infer<typeof summaryQuerySchema>;

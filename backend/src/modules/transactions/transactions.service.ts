@@ -1,12 +1,13 @@
-import { and, count, desc, eq, gte, lte, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gte, lte, sql, SQL } from 'drizzle-orm';
 import { db } from '../../db/index.js';
-import { transactions } from '../../db/schema.js';
+import { categories, transactions } from '../../db/schema.js';
 import { adjustAccountBalance, assertAccountOwned } from '../accounts/accounts.service.js';
 import { assertCategoryOwned } from '../categories/categories.service.js';
 import { NotFoundError } from '../../utils/app-error.js';
 import type {
   CreateTransactionInput,
   ListTransactionsQuery,
+  SummaryQuery,
   UpdateTransactionInput,
 } from './transactions.schema.js';
 
@@ -20,6 +21,52 @@ const listFilterWhere = (userId: number, filters: ListTransactionsQuery): SQL | 
   if (filters.startDate !== undefined) conditions.push(gte(transactions.occurredAt, filters.startDate));
   if (filters.endDate !== undefined) conditions.push(lte(transactions.occurredAt, filters.endDate));
   return and(...conditions);
+};
+
+const dateRangeWhere = (userId: number, filters: SummaryQuery): SQL | undefined => {
+  const conditions = [eq(transactions.userId, userId)];
+  if (filters.startDate !== undefined) conditions.push(gte(transactions.occurredAt, filters.startDate));
+  if (filters.endDate !== undefined) conditions.push(lte(transactions.occurredAt, filters.endDate));
+  return and(...conditions);
+};
+
+export const getTransactionsSummary = async (userId: number, filters: SummaryQuery) => {
+  const where = dateRangeWhere(userId, filters);
+
+  const [row] = await db
+    .select({
+      income: sql<string>`coalesce(sum(case when ${transactions.type} = 'income' then ${transactions.amount} else 0 end), 0)`,
+      expense: sql<string>`coalesce(sum(case when ${transactions.type} = 'expense' then ${transactions.amount} else 0 end), 0)`,
+    })
+    .from(transactions)
+    .where(where);
+
+  const income = Number(row?.income ?? 0);
+  const expense = Number(row?.expense ?? 0);
+  return { income, expense, net: income - expense };
+};
+
+export const getTransactionsByCategory = async (userId: number, filters: SummaryQuery) => {
+  const where = dateRangeWhere(userId, filters);
+
+  const rows = await db
+    .select({
+      categoryId: transactions.categoryId,
+      categoryName: categories.name,
+      type: transactions.type,
+      total: sql<string>`sum(${transactions.amount})`,
+    })
+    .from(transactions)
+    .leftJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(where)
+    .groupBy(transactions.categoryId, categories.name, transactions.type);
+
+  return rows.map((row) => ({
+    categoryId: row.categoryId,
+    categoryName: row.categoryName ?? 'Uncategorized',
+    type: row.type,
+    total: Number(row.total),
+  }));
 };
 
 export const listTransactions = async (userId: number, filters: ListTransactionsQuery) => {

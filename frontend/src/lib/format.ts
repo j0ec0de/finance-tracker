@@ -16,3 +16,8 @@ function getFormatter(currency: string) {
 export function formatCurrency(value: number, currency = "USD") {
   return getFormatter(currency).format(value)
 }
+
+export function calcDeltaPct(current: number, previous: number) {
+  if (previous === 0) return 0
+  return ((current - previous) / Math.abs(previous)) * 100
+}

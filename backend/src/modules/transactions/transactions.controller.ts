@@ -5,6 +5,7 @@ import * as transactionsService from './transactions.service.js';
 import {
   createTransactionSchema,
   listTransactionsQuerySchema,
+  summaryQuerySchema,
   updateTransactionSchema,
 } from './transactions.schema.js';
 
@@ -12,6 +13,18 @@ export const list = async (req: Request, res: Response) => {
   const filters = listTransactionsQuerySchema.parse(req.query);
   const { data, total } = await transactionsService.listTransactions(getCurrentUserId(req), filters);
   res.json({ data, total, limit: filters.limit, offset: filters.offset });
+};
+
+export const summary = async (req: Request, res: Response) => {
+  const filters = summaryQuerySchema.parse(req.query);
+  const result = await transactionsService.getTransactionsSummary(getCurrentUserId(req), filters);
+  res.json(result);
+};
+
+export const byCategory = async (req: Request, res: Response) => {
+  const filters = summaryQuerySchema.parse(req.query);
+  const data = await transactionsService.getTransactionsByCategory(getCurrentUserId(req), filters);
+  res.json({ data });
 };
 
 export const getOne = async (req: Request, res: Response) => {
