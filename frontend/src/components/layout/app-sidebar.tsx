@@ -26,7 +26,7 @@ export function AppSidebar() {
                 <div className="flex size-8 items-center justify-center rounded-md bg-primary text-primary-foreground">
                   <Wallet className="size-4" />
                 </div>
-                <div className="flex flex-col gap-0.5 leading-none">
+                <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
                   <span className="font-semibold">Finch</span>
                   <span className="text-xs text-muted-foreground">
                     Personal Finance
