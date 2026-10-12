@@ -123,17 +123,25 @@ from `@/lib/utils` (a re-export) — either is fine, match the surrounding file.
 live under `src/components/<area>/`, pages under `src/pages/`, and a multi-part page gets its own
 directory (`src/pages/dashboard/*` holds the dashboard's cards).
 
-**Forms**: hand-rolled hooks per form (`src/hooks/use-login-form.ts`, `use-register-form.ts`) own
-the field state, submit handler, `error`, and `isSubmitting`; the page component only renders.
-`react-hook-form` and `@tanstack/react-query` are installed but not used yet — Query is mounted
-with no `useQuery` call anywhere, so server state is currently fetched through the auth context
-alone.
+**Forms**: hand-rolled hooks per form (`src/hooks/use-login-form.ts`, `use-register-form.ts`,
+`use-create-account-form.ts`, `use-edit-account-form.ts`, `use-create-transaction-form.ts`,
+`use-edit-transaction-form.ts`) own the field state, submit handler, `error`, and `isSubmitting`;
+the page component only renders. `react-hook-form` is installed but not used yet.
+`@tanstack/react-query` is now in active use — see `src/hooks/use-accounts.ts` and
+`src/hooks/use-transactions.ts` for the `useQuery`/`useMutation` hooks backing the accounts,
+transactions, and dashboard pages.
 
 **Charts**: recharts v3 via the shadcn `ChartContainer` wrapper (`src/components/ui/chart.tsx`),
 which supplies the chart CSS variables from a `ChartConfig`. Series colors must come from
 `--chart-1` … `--chart-6`.
 
-**Current state**: the dashboard (`src/pages/dashboard-page.tsx`) is built out but renders
-hardcoded data from `src/pages/dashboard/mock-data.ts` — it is not wired to the API yet. The
-transactions, accounts, budgets, and analytics pages are `PagePlaceholder` stubs. Wiring these to
-the backend is the open work.
+**Current state**: accounts and transactions pages (`src/pages/accounts-page.tsx`,
+`src/pages/transactions-page.tsx`) are fully wired to the API via React Query hooks, with
+create/edit/delete dialogs and pagination/filtering; they fall back to `PagePlaceholder` only for
+genuine empty states. The dashboard (`src/pages/dashboard-page.tsx`) is mostly wired too — the
+balance overview, cost analysis, financial health, and transaction history cards all fetch real
+data via `useAccounts`/`useTransactions`/`useTransactionsSummary`/`useTransactionsByCategory`.
+Only `src/pages/dashboard/goal-tracker-card.tsx` and `spending-limit-card.tsx` still read from
+`src/pages/dashboard/mock-data.ts`, since there's no budgets/goals backend module yet. The budgets
+and analytics pages remain `PagePlaceholder` stubs — wiring those (and adding a budgets/goals
+backend module) is the open work.
