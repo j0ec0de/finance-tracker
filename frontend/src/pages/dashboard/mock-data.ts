@@ -1,10 +1,4 @@
-// Budgets and savings goals have no backend model yet (see backend/docs/upcoming-features.md),
-// so SpendingLimitCard and GoalTrackerCard still render this mock data.
-
-export const monthlySpendingLimit = {
-  spent: 8600,
-  limit: 10000,
-}
+// Savings goals have no backend model yet, so GoalTrackerCard still renders this mock data.
 
 export type Goal = {
   name: string

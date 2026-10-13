@@ -3,6 +3,7 @@ import { integer, numeric, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/
 
 export const transactionTypeEnum = pgEnum('transaction_type', ['expense', 'income']);
 export const accountTypeEnum = pgEnum('account_type', ['cash', 'bank', 'credit_card', 'wallet', 'investment', 'other']);
+export const budgetPeriodEnum = pgEnum('budget_period', ['weekly', 'monthly']);
 
 export const users = pgTable('users', {
   id: integer().primaryKey().generatedAlwaysAsIdentity(),
@@ -44,10 +45,20 @@ export const transactions = pgTable('transactions', {
   createdAt: timestamp().notNull().defaultNow(),
 });
 
+export const budgets = pgTable('budgets', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  userId: integer().notNull().references(() => users.id, { onDelete: 'cascade' }),
+  categoryId: integer().notNull().references(() => categories.id, { onDelete: 'cascade' }),
+  limit: numeric({ precision: 12, scale: 2 }).notNull(),
+  period: budgetPeriodEnum().notNull().default('monthly'),
+  createdAt: timestamp().notNull().defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   categories: many(categories),
   transactions: many(transactions),
+  budgets: many(budgets),
 }));
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
@@ -58,6 +69,12 @@ export const accountsRelations = relations(accounts, ({ one, many }) => ({
 export const categoriesRelations = relations(categories, ({ one, many }) => ({
   user: one(users, { fields: [categories.userId], references: [users.id] }),
   transactions: many(transactions),
+  budgets: many(budgets),
+}));
+
+export const budgetsRelations = relations(budgets, ({ one }) => ({
+  user: one(users, { fields: [budgets.userId], references: [users.id] }),
+  category: one(categories, { fields: [budgets.categoryId], references: [categories.id] }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
