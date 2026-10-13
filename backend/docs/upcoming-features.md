@@ -38,6 +38,38 @@ Status legend: **Done** — merged into the working tree and verified. **Next** 
 
 Net worth is the sum of account balances on the client; there is no dedicated endpoint for it.
 
+### 14. Budgets
+- `budgets` table: one row per category per user, with a `limit` and a `weekly`/`monthly` `period`.
+- Full CRUD under `/api/budgets`. Creating a second budget for the same category returns 409.
+- `spent` and `remaining` are computed per request from the expenses in the current period, not stored.
+
+### 15. Savings goals
+- `goals` table: `name`, `targetAmount`, `savedAmount`, optional `targetDate`, FK'd to `userId`.
+- Full CRUD under `/api/goals`. Listed oldest first (`createdAt`, then `id`).
+- `savedAmount` is maintained by hand through `PATCH`, not derived from transactions — see the
+  open decision below.
+- `targetDate` accepts `null` on `PATCH` so an existing date can be cleared.
+
+
+### 16. PATCH no longer resets omitted fields to their defaults
+A Zod `.default()` survives `.partial()`, so every `updateSchema` built as
+`createSchema.partial()` filled in defaults for keys the caller omitted, and the service wrote them
+to the database. A `PATCH` that touched one field silently reset the others:
+
+- `PATCH /api/accounts/:id` with just a name reset `type` to `cash` and `currency` to `USD`.
+- `PATCH /api/categories/:id` with just a name reset `type` to `expense`.
+- `PATCH /api/budgets/:id` with just a limit reset `period` to `monthly`.
+
+Each update schema is now built from a no-default base, with defaults declared only on the create
+schema. Keep that split when adding a resource: **never derive an update schema from a create
+schema that carries defaults.**
+
+Removing the defaults exposed a second problem — an update body with no recognised fields parsed to
+`{}`, and Drizzle's `.set({})` throws `No values to set`, which the error handler logged as a 500.
+`nonEmptyUpdate` (`src/utils/non-empty-update.schema.ts`) now wraps every update schema and returns
+a 400 instead. This also covered `users` and `transactions`, which had the 500 all along since
+their schemas carried no defaults to mask it.
+
 ## Next
 
 ### 8. Tests for the balance logic
@@ -67,3 +99,5 @@ Tokens expire after 1 day with no refresh. Decide whether the frontend re-logs i
 - **Transfers:** in scope for the first frontend release?
 - **Currency:** single currency for summaries, or grouped by currency?
 - **Duplicate profile route:** keep both `GET /api/auth/me` and `GET /api/users/me`, or remove one?
+- **Goal funding:** `savedAmount` is edited by hand today. Should contributions instead be
+  transactions tagged to a goal, so the saved total is derived the way `spent` is for budgets?

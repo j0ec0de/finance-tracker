@@ -4,6 +4,7 @@ import {
   LineChart,
   PiggyBank,
   Tags,
+  Target,
   Wallet,
   type LucideIcon,
 } from "lucide-react"
@@ -20,5 +21,6 @@ export const navItems: NavItem[] = [
   { title: "Accounts", url: "/accounts", icon: Wallet },
   { title: "Categories", url: "/categories", icon: Tags },
   { title: "Budgets", url: "/budgets", icon: PiggyBank },
+  { title: "Goals", url: "/goals", icon: Target },
   { title: "Analytics", url: "/analytics", icon: LineChart },
 ]

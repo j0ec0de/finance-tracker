@@ -43,9 +43,13 @@ Express 5 app (`src/index.ts`) enables `cors` for `CORS_ORIGINS`, exposes an una
 - `*.routes.ts` — maps HTTP verbs to controller functions, wraps each in `asyncHandler`
 - `*.controller.ts` — parses `req.body`/`req.query`/`req.params` with the module's Zod schemas, calls the service, shapes the HTTP response. No business logic here.
 - `*.service.ts` — the actual DB/business logic using Drizzle. Takes plain parsed inputs, returns plain data or throws `AppError` subclasses.
-- `*.schema.ts` — Zod schemas and inferred types for request validation, imported by both controller and service for types.
+- `*.schema.ts` — Zod schemas and inferred types for request validation, imported by both controller and service for types. A resource's update schema is built from a
+  defaults-free base (not from `createSchema.partial()`, since a Zod `.default()` survives
+  `.partial()` and would reset omitted fields on a `PATCH`) and wrapped in `nonEmptyUpdate`
+  (`src/utils/non-empty-update.schema.ts`), which 400s a body with no recognised fields rather than
+  letting Drizzle's `.set({})` throw.
 
-Existing modules: `auth`, `users`, `accounts`, `categories`, `transactions`. New resources should follow this exact structure.
+Existing modules: `auth`, `users`, `accounts`, `categories`, `transactions`, `budgets`, `goals`. New resources should follow this exact structure.
 
 **Error handling**: services/controllers throw; nothing is caught locally. `asyncHandler`
 (`src/utils/async-handler.ts`) forwards rejected promises to `next()`. The global `errorHandler`
@@ -58,8 +62,11 @@ logged 500.
 **Auth**: `requireAuth` (`src/middleware/auth.ts`) reads a `Bearer` JWT, verifies it with `src/utils/jwt.ts`, and attaches `req.user = { id, email }` (typed via a global `Express.Request` augmentation in the same file). Passwords are hashed with bcrypt via `src/utils/password.ts`.
 
 **Database** (`src/db/`): Drizzle ORM over `pg`, schema in `schema.ts`, pool/client in `index.ts`.
-Core tables: `users` → `accounts`, `categories`, `transactions` (all FK'd to `userId`, cascade on
-delete). `accounts.balance` is a cached running total, not derived on read — it's set from the
+Core tables: `users` → `accounts`, `categories`, `transactions`, `budgets`, `goals` (all FK'd to
+`userId`, cascade on delete). `budgets` also FKs to `categories`; `goals` stands alone, holding a
+`targetAmount`, a manually-maintained `savedAmount`, and an optional `targetDate`.
+
+`accounts.balance` is a cached running total, not derived on read — it's set from the
 `balance` field on create and thereafter kept in sync by `adjustAccountBalance`
 (`modules/accounts/accounts.service.ts`) whenever a transaction is created, updated, or deleted.
 It is deliberately not editable through the update endpoint (`updateAccountSchema` omits it).
@@ -123,25 +130,22 @@ from `@/lib/utils` (a re-export) — either is fine, match the surrounding file.
 live under `src/components/<area>/`, pages under `src/pages/`, and a multi-part page gets its own
 directory (`src/pages/dashboard/*` holds the dashboard's cards).
 
-**Forms**: hand-rolled hooks per form (`src/hooks/use-login-form.ts`, `use-register-form.ts`,
-`use-create-account-form.ts`, `use-edit-account-form.ts`, `use-create-transaction-form.ts`,
-`use-edit-transaction-form.ts`) own the field state, submit handler, `error`, and `isSubmitting`;
-the page component only renders. `react-hook-form` is installed but not used yet.
-`@tanstack/react-query` is now in active use — see `src/hooks/use-accounts.ts` and
-`src/hooks/use-transactions.ts` for the `useQuery`/`useMutation` hooks backing the accounts,
-transactions, and dashboard pages.
+**Forms**: hand-rolled hooks per form — `use-login-form.ts`, `use-register-form.ts`, and a
+`use-create-<resource>-form.ts` / `use-edit-<resource>-form.ts` pair per resource (`account`,
+`transaction`, `category`, `budget`, `goal`) — own the field state, submit handler, `error`, and
+`isSubmitting`; the page component only renders. `react-hook-form` is installed but not used yet.
+`@tanstack/react-query` is in active use: one `src/hooks/use-<resource>.ts` module per resource
+(`use-accounts.ts`, `use-transactions.ts`, `use-categories.ts`, `use-budgets.ts`, `use-goals.ts`)
+holds the `useQuery`/`useMutation` hooks backing the pages and dashboard cards.
 
 **Charts**: recharts v3 via the shadcn `ChartContainer` wrapper (`src/components/ui/chart.tsx`),
 which supplies the chart CSS variables from a `ChartConfig`. Series colors must come from
 `--chart-1` … `--chart-6`.
 
-**Current state**: accounts and transactions pages (`src/pages/accounts-page.tsx`,
-`src/pages/transactions-page.tsx`) are fully wired to the API via React Query hooks, with
-create/edit/delete dialogs and pagination/filtering; they fall back to `PagePlaceholder` only for
-genuine empty states. The dashboard (`src/pages/dashboard-page.tsx`) is mostly wired too — the
-balance overview, cost analysis, financial health, and transaction history cards all fetch real
-data via `useAccounts`/`useTransactions`/`useTransactionsSummary`/`useTransactionsByCategory`.
-Only `src/pages/dashboard/goal-tracker-card.tsx` and `spending-limit-card.tsx` still read from
-`src/pages/dashboard/mock-data.ts`, since there's no budgets/goals backend module yet. The budgets
-and analytics pages remain `PagePlaceholder` stubs — wiring those (and adding a budgets/goals
-backend module) is the open work.
+**Current state**: the accounts, transactions, categories, budgets, and goals pages are fully
+wired to the API via React Query hooks, with create/edit/delete dialogs (and
+pagination/filtering on transactions); they fall back to `PagePlaceholder` only for genuine empty
+states. The dashboard (`src/pages/dashboard-page.tsx`) is fully wired too — every card fetches
+real data, and there is no mock data left anywhere in the frontend. `src/pages/analytics-page.tsx`
+is the last `PagePlaceholder` stub; wiring it (on top of the existing `/transactions/summary` and
+`/transactions/by-category` endpoints) is the open frontend work.

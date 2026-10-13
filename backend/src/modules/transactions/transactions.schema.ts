@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { positiveIdSchema } from '../../utils/id-param.schema.js';
+import { nonEmptyUpdate } from '../../utils/non-empty-update.schema.js';
 
 const transactionTypes = ['expense', 'income'] as const;
 
@@ -12,7 +13,7 @@ export const createTransactionSchema = z.object({
   occurredAt: z.coerce.date().optional(),
 });
 
-export const updateTransactionSchema = createTransactionSchema.partial();
+export const updateTransactionSchema = nonEmptyUpdate(createTransactionSchema.partial());
 
 export const listTransactionsQuerySchema = z.object({
   accountId: positiveIdSchema.optional(),

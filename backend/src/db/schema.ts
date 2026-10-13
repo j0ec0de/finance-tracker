@@ -54,11 +54,22 @@ export const budgets = pgTable('budgets', {
   createdAt: timestamp().notNull().defaultNow(),
 });
 
+export const goals = pgTable('goals', {
+  id: integer().primaryKey().generatedAlwaysAsIdentity(),
+  userId: integer().notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: text().notNull(),
+  targetAmount: numeric({ precision: 12, scale: 2 }).notNull(),
+  savedAmount: numeric({ precision: 12, scale: 2 }).notNull().default('0'),
+  targetDate: timestamp(),
+  createdAt: timestamp().notNull().defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   accounts: many(accounts),
   categories: many(categories),
   transactions: many(transactions),
   budgets: many(budgets),
+  goals: many(goals),
 }));
 
 export const accountsRelations = relations(accounts, ({ one, many }) => ({
@@ -75,6 +86,10 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
 export const budgetsRelations = relations(budgets, ({ one }) => ({
   user: one(users, { fields: [budgets.userId], references: [users.id] }),
   category: one(categories, { fields: [budgets.categoryId], references: [categories.id] }),
+}));
+
+export const goalsRelations = relations(goals, ({ one }) => ({
+  user: one(users, { fields: [goals.userId], references: [users.id] }),
 }));
 
 export const transactionsRelations = relations(transactions, ({ one }) => ({
