@@ -4,6 +4,7 @@ import { ArrowLeftRight, Pencil, Plus, Trash2 } from "lucide-react"
 import { useAccounts } from "@/hooks/use-accounts"
 import { useCategories } from "@/hooks/use-categories"
 import { useCreateTransactionForm } from "@/hooks/use-create-transaction-form"
+import { useCreateTransferForm } from "@/hooks/use-create-transfer-form"
 import { useEditTransactionForm } from "@/hooks/use-edit-transaction-form"
 import { useDeleteTransaction, useTransactions } from "@/hooks/use-transactions"
 import type { Account } from "@/lib/accounts"
@@ -220,6 +221,126 @@ function AddTransactionDialog({
   )
 }
 
+function TransferDialog({ accounts }: { accounts: Account[] }) {
+  const [open, setOpen] = useState(false)
+  const {
+    fromAccountId,
+    setFromAccountId,
+    toAccountId,
+    setToAccountId,
+    amount,
+    setAmount,
+    description,
+    setDescription,
+    occurredAt,
+    setOccurredAt,
+    error,
+    isSubmitting,
+    handleSubmit,
+  } = useCreateTransferForm(accounts[0]?.id, () => setOpen(false))
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="sm" variant="outline" disabled={accounts.length < 2}>
+          <ArrowLeftRight data-icon="inline-start" />
+          Transfer
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Transfer between accounts</DialogTitle>
+          <DialogDescription>
+            Moves money from one of your accounts to another and keeps both balances in sync.
+          </DialogDescription>
+        </DialogHeader>
+        <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="transfer-from-account">From</Label>
+              <Select value={fromAccountId} onValueChange={setFromAccountId}>
+                <SelectTrigger id="transfer-from-account" className="w-full">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts
+                    .filter((account) => String(account.id) !== toAccountId)
+                    .map((account) => (
+                      <SelectItem key={account.id} value={String(account.id)}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="transfer-to-account">To</Label>
+              <Select value={toAccountId} onValueChange={setToAccountId}>
+                <SelectTrigger id="transfer-to-account" className="w-full">
+                  <SelectValue placeholder="Select account" />
+                </SelectTrigger>
+                <SelectContent>
+                  {accounts
+                    .filter((account) => String(account.id) !== fromAccountId)
+                    .map((account) => (
+                      <SelectItem key={account.id} value={String(account.id)}>
+                        {account.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="transfer-amount">Amount</Label>
+              <Input
+                id="transfer-amount"
+                type="number"
+                step="0.01"
+                min="0"
+                inputMode="decimal"
+                required
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="transfer-date">Date</Label>
+              <Input
+                id="transfer-date"
+                type="date"
+                required
+                value={occurredAt}
+                onChange={(e) => setOccurredAt(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="transfer-description">Description</Label>
+            <Input
+              id="transfer-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Optional"
+            />
+          </div>
+
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <DialogFooter>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "Transferring…" : "Transfer"}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 function EditTransactionDialog({
   transaction,
   accounts,
@@ -404,10 +525,13 @@ export default function TransactionsPage() {
               </SelectContent>
             </Select>
             {!accountsLoading && (
-              <AddTransactionDialog
-                accounts={accounts ?? []}
-                categories={categories ?? []}
-              />
+              <>
+                <TransferDialog accounts={accounts ?? []} />
+                <AddTransactionDialog
+                  accounts={accounts ?? []}
+                  categories={categories ?? []}
+                />
+              </>
             )}
           </div>
         </CardHeader>
@@ -457,7 +581,12 @@ export default function TransactionsPage() {
                         </TableCell>
                         <TableCell>{account?.name ?? "—"}</TableCell>
                         <TableCell>
-                          {category ? (
+                          {transaction.transferGroupId ? (
+                            <Badge variant="outline">
+                              <ArrowLeftRight data-icon="inline-start" />
+                              Transfer
+                            </Badge>
+                          ) : category ? (
                             <Badge variant="secondary">{category.name}</Badge>
                           ) : (
                             <span className="text-muted-foreground">—</span>
@@ -485,14 +614,16 @@ export default function TransactionsPage() {
                         </TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Edit transaction"
-                              onClick={() => setEditingTransaction(transaction)}
-                            >
-                              <Pencil />
-                            </Button>
+                            {!transaction.transferGroupId && (
+                              <Button
+                                variant="ghost"
+                                size="icon-sm"
+                                aria-label="Edit transaction"
+                                onClick={() => setEditingTransaction(transaction)}
+                              >
+                                <Pencil />
+                              </Button>
+                            )}
                             <Button
                               variant="ghost"
                               size="icon-sm"

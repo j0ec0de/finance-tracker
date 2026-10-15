@@ -29,6 +29,13 @@
       "when": 1791915518327,
       "tag": "0003_legal_wolverine",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792050713075,
+      "tag": "0004_uneven_juggernaut",
+      "breakpoints": true
     }
   ]
 }

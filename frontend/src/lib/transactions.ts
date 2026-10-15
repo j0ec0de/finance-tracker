@@ -14,6 +14,7 @@ export type Transaction = {
   description: string | null
   occurredAt: string
   createdAt: string
+  transferGroupId: string | null
 }
 
 export type CreateTransactionInput = {

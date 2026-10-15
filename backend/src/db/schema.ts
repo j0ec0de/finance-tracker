@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm';
-import { integer, numeric, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { integer, numeric, pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const transactionTypeEnum = pgEnum('transaction_type', ['expense', 'income']);
 export const accountTypeEnum = pgEnum('account_type', ['cash', 'bank', 'credit_card', 'wallet', 'investment', 'other']);
@@ -43,6 +43,7 @@ export const transactions = pgTable('transactions', {
   description: text(),
   occurredAt: timestamp().notNull().defaultNow(),
   createdAt: timestamp().notNull().defaultNow(),
+  transferGroupId: uuid('transfer_group_id'),
 });
 
 export const budgets = pgTable('budgets', {

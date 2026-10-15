@@ -3,7 +3,7 @@ import { db } from '../../db/index.js';
 import { categories, transactions } from '../../db/schema.js';
 import { adjustAccountBalance, assertAccountOwned } from '../accounts/accounts.service.js';
 import { assertCategoryOwned } from '../categories/categories.service.js';
-import { NotFoundError } from '../../utils/app-error.js';
+import { ConflictError, NotFoundError } from '../../utils/app-error.js';
 import type {
   CreateTransactionInput,
   ListTransactionsQuery,
@@ -117,6 +117,9 @@ export const updateTransaction = async (userId: number, id: number, input: Updat
       .from(transactions)
       .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
     if (!existing) throw new NotFoundError('Transaction');
+    if (existing.transferGroupId !== null) {
+      throw new ConflictError('Transfers cannot be edited directly; delete and recreate them.');
+    }
 
     const merged = {
       accountId: input.accountId ?? existing.accountId,
@@ -150,16 +153,29 @@ export const updateTransaction = async (userId: number, id: number, input: Updat
 
 export const deleteTransaction = async (userId: number, id: number) => {
   return db.transaction(async (tx) => {
-    const [transaction] = await tx
-      .delete(transactions)
-      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
-      .returning();
-    if (!transaction) throw new NotFoundError('Transaction');
+    const [existing] = await tx
+      .select()
+      .from(transactions)
+      .where(and(eq(transactions.id, id), eq(transactions.userId, userId)));
+    if (!existing) throw new NotFoundError('Transaction');
 
-    await adjustAccountBalance(
-      tx,
-      transaction.accountId,
-      -balanceDelta(transaction.type, Number(transaction.amount)),
-    );
+    // A transfer's two legs are deleted and reversed together so the pair can't go half-deleted.
+    const deleted = existing.transferGroupId !== null
+      ? await tx
+        .delete(transactions)
+        .where(and(eq(transactions.transferGroupId, existing.transferGroupId), eq(transactions.userId, userId)))
+        .returning()
+      : await tx
+        .delete(transactions)
+        .where(and(eq(transactions.id, id), eq(transactions.userId, userId)))
+        .returning();
+
+    for (const transaction of deleted) {
+      await adjustAccountBalance(
+        tx,
+        transaction.accountId,
+        -balanceDelta(transaction.type, Number(transaction.amount)),
+      );
+    }
   });
 };

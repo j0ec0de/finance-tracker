@@ -6,6 +6,7 @@ import { budgetsRouter } from '../modules/budgets/budgets.routes.js';
 import { categoriesRouter } from '../modules/categories/categories.routes.js';
 import { goalsRouter } from '../modules/goals/goals.routes.js';
 import { transactionsRouter } from '../modules/transactions/transactions.routes.js';
+import { transfersRouter } from '../modules/transfers/transfers.routes.js';
 import { usersRouter } from '../modules/users/users.routes.js';
 
 export const apiRouter = Router();
@@ -15,5 +16,6 @@ apiRouter.use('/users', requireAuth, usersRouter);
 apiRouter.use('/accounts', requireAuth, accountsRouter);
 apiRouter.use('/categories', requireAuth, categoriesRouter);
 apiRouter.use('/transactions', requireAuth, transactionsRouter);
+apiRouter.use('/transfers', requireAuth, transfersRouter);
 apiRouter.use('/budgets', requireAuth, budgetsRouter);
 apiRouter.use('/goals', requireAuth, goalsRouter);

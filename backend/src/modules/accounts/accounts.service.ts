@@ -53,6 +53,16 @@ export const assertAccountOwned = async (executor: Executor, userId: number, acc
   if (!account) throw new NotFoundError('Account');
 };
 
+/** Returns the account's id and name, or throws NotFoundError unless it belongs to the user. */
+export const getOwnedAccount = async (executor: Executor, userId: number, accountId: number) => {
+  const [account] = await executor
+    .select({ id: accounts.id, name: accounts.name })
+    .from(accounts)
+    .where(and(eq(accounts.id, accountId), eq(accounts.userId, userId)));
+  if (!account) throw new NotFoundError('Account');
+  return account;
+};
+
 /** Applies a signed delta (positive or negative) to an account's balance. */
 export const adjustAccountBalance = async (executor: Executor, accountId: number, delta: number) => {
   await executor
