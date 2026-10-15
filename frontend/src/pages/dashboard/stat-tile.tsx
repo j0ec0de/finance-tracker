@@ -7,9 +7,15 @@ type StatTileProps = {
   label: string
   value: number
   deltaPct: number
+  comparisonLabel?: string
 }
 
-export function StatTile({ label, value, deltaPct }: StatTileProps) {
+export function StatTile({
+  label,
+  value,
+  deltaPct,
+  comparisonLabel = "from last month",
+}: StatTileProps) {
   const isUp = deltaPct >= 0
 
   return (
@@ -27,7 +33,7 @@ export function StatTile({ label, value, deltaPct }: StatTileProps) {
         ) : (
           <TrendingDown className="size-3.5" />
         )}
-        {Math.abs(deltaPct)}% from last month
+        {Math.abs(deltaPct)}% {comparisonLabel}
       </span>
     </div>
   )

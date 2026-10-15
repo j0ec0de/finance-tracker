@@ -1,7 +1,13 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
+import {
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
 
 import { accountsKey } from "@/hooks/use-accounts"
 import { useAuth } from "@/hooks/use-auth"
+import { getMonthLabel, getMonthRange } from "@/lib/date-range"
 import * as transactionsApi from "@/lib/transactions"
 import type {
   CreateTransactionInput,
@@ -41,6 +47,31 @@ export function useTransactionsByCategory(params: DateRangeParams = {}) {
     queryFn: () => transactionsApi.getTransactionsByCategory(token!, params),
     enabled: !!token,
   })
+}
+
+export function useTransactionsTrend(months: number) {
+  const { token } = useAuth()
+  const offsets = Array.from({ length: months }, (_, i) => months - 1 - i)
+  const ranges = offsets.map((offset) => getMonthRange(offset))
+
+  const results = useQueries({
+    queries: ranges.map((range) => ({
+      queryKey: ["transactions", "summary", range] as const,
+      queryFn: () => transactionsApi.getTransactionsSummary(token!, range),
+      enabled: !!token,
+    })),
+  })
+
+  return {
+    data: offsets.map((offset, i) => ({
+      month: getMonthLabel(offset),
+      income: results[i].data?.income ?? 0,
+      expense: results[i].data?.expense ?? 0,
+    })),
+    isLoading: results.some((r) => r.isLoading),
+    isError: results.some((r) => r.isError),
+    error: results.find((r) => r.isError)?.error,
+  }
 }
 
 function useInvalidateOnMutate() {
