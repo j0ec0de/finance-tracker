@@ -25,8 +25,10 @@ All commands are run from `backend/`.
 - `npm run db:migrate` — apply pending migrations to the database
 - `npm run db:push` — push the schema directly to the database without a migration file (dev only)
 - `npm run db:studio` — open Drizzle Studio to inspect data
+- `npm test` — run the Vitest suite (integration tests against the real `DATABASE_URL` database,
+  see `src/test/helpers.ts`)
 
-There is no test suite, lint command, or build step configured yet.
+There is no lint command or build step configured yet.
 
 Required env vars (see `backend/.env.example`): `PORT`, `DATABASE_URL` (Postgres), `JWT_SECRET`,
 `JWT_EXPIRES_IN`, `CORS_ORIGINS` (comma-separated allowed origins; defaults to the Vite dev server
@@ -73,6 +75,8 @@ It is deliberately not editable through the update endpoint (`updateAccountSchem
 Transaction creation/update/deletion wraps the row write and the balance adjustment in a single
 `db.transaction(...)` (see `modules/transactions/transactions.service.ts`) to keep them atomic —
 follow this pattern for any new code that touches both a transaction and its account's balance.
+This balance logic is covered by `src/modules/transactions/transactions.service.test.ts` and
+`src/modules/transfers/transfers.service.test.ts` — extend those when changing it.
 
 Transaction listing is paginated: the query schema takes `limit` (default 50, max 200) and
 `offset` (default 0), and the service returns `{ data, total }`, with `total` from a parallel
@@ -147,5 +151,7 @@ wired to the API via React Query hooks, with create/edit/delete dialogs (and
 pagination/filtering on transactions); they fall back to `PagePlaceholder` only for genuine empty
 states. The dashboard (`src/pages/dashboard-page.tsx`) is fully wired too — every card fetches
 real data, and there is no mock data left anywhere in the frontend. `src/pages/analytics-page.tsx`
-is the last `PagePlaceholder` stub; wiring it (on top of the existing `/transactions/summary` and
-`/transactions/by-category` endpoints) is the open frontend work.
+is also fully wired (`src/pages/analytics/*` cards for summary stats, income vs. expenses trend,
+and category breakdown, backed by `/transactions/summary` and `/transactions/by-category`) — no
+`PagePlaceholder` stubs remain anywhere in the frontend. Check `backend/docs/upcoming-features.md`
+for the next piece of planned work.

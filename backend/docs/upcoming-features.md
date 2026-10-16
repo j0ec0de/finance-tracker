@@ -70,18 +70,26 @@ Removing the defaults exposed a second problem — an update body with no recogn
 a 400 instead. This also covered `users` and `transactions`, which had the 500 all along since
 their schemas carried no defaults to mask it.
 
-## Next
+### 10. Transfers between accounts
+- `POST /api/transfers` creates a linked pair of transactions (expense on the source account,
+  income on the destination account) in one `db.transaction`, tagged with a shared
+  `transferGroupId` so they can be identified as a pair.
+- Both accounts' balances are adjusted atomically via the existing `adjustAccountBalance`.
 
 ### 8. Tests for the balance logic
-There is no test suite. Add tests for account balance changes on create, edit (including moving a transaction to another account or changing its amount or type), and delete, before refactoring further.
+- `npm test` (Vitest) runs integration tests against the real dev database (`DATABASE_URL`),
+  using `src/test/helpers.ts` to create a throwaway user per test and delete it afterward
+  (cascades clean up its accounts/categories/transactions).
+- `src/modules/transactions/transactions.service.test.ts` covers balance changes on create, on
+  update (amount change, type flip, moving to another account), on delete, and the guard against
+  editing a transfer leg directly.
+- `src/modules/transfers/transfers.service.test.ts` covers both legs of a transfer being created
+  and reversed atomically.
 
 ## Later
 
 ### 9. Money format
 Postgres `numeric` values come back as strings, and so do amounts and balances. Confirm the convention (keep strings and format on the client) and document it in the API notes.
-
-### 10. Transfers between accounts
-An endpoint that creates a linked pair of transactions (expense on one account, income on the other) in one database transaction.
 
 ### 11. Default categories
 Seed a starter set of categories on registration, or leave categories fully user-defined. Decide first (see open decisions).
@@ -96,7 +104,6 @@ Tokens expire after 1 day with no refresh. Decide whether the frontend re-logs i
 
 - **Frontend dev setup:** CORS is in place (feature 4). A Vite proxy to `/api` is still an option if the frontend would rather avoid CORS in development.
 - **Default categories:** seed on registration, or user-defined only?
-- **Transfers:** in scope for the first frontend release?
 - **Currency:** single currency for summaries, or grouped by currency?
 - **Duplicate profile route:** keep both `GET /api/auth/me` and `GET /api/users/me`, or remove one?
 - **Goal funding:** `savedAmount` is edited by hand today. Should contributions instead be
