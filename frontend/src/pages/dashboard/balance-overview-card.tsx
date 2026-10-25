@@ -1,7 +1,12 @@
+import { useState } from "react"
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts"
 
 import { useAccounts } from "@/hooks/use-accounts"
-import { useTransactions, useTransactionsSummary } from "@/hooks/use-transactions"
+import {
+  useTransactions,
+  useTransactionsSummary,
+  useTransactionsTrend,
+} from "@/hooks/use-transactions"
 import {
   Card,
   CardContent,
@@ -16,6 +21,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getLastNDaysRange, getMonthRange } from "@/lib/date-range"
 import { useFormatCurrency } from "@/hooks/use-display-currency"
@@ -27,17 +39,28 @@ const chartConfig = {
   expenses: { label: "Expenses", color: "var(--chart-2)" },
 } satisfies ChartConfig
 
+const RANGE_OPTIONS = [
+  { value: "7d", label: "Last 7 days", days: 7, months: 0 },
+  { value: "30d", label: "Last 30 days", days: 30, months: 0 },
+  { value: "6m", label: "Last 6 months", days: 7, months: 6 },
+  { value: "12m", label: "Last 12 months", days: 7, months: 12 },
+]
+
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 function buildDailyFlow(
-  transactions: { type: "income" | "expense"; amount: string; occurredAt: string }[]
+  transactions: { type: "income" | "expense"; amount: string; occurredAt: string }[],
+  dayCount: number
 ) {
-  const days = Array.from({ length: 7 }, (_, i) => {
+  const days = Array.from({ length: dayCount }, (_, i) => {
     const date = new Date()
-    date.setDate(date.getDate() - (6 - i))
+    date.setDate(date.getDate() - (dayCount - 1 - i))
     return {
       key: date.toDateString(),
-      day: WEEKDAY_LABELS[date.getDay()],
+      day:
+        dayCount <= 7
+          ? WEEKDAY_LABELS[date.getDay()]
+          : `${date.getDate()}/${date.getMonth() + 1}`,
       income: 0,
       expenses: 0,
     }
@@ -58,40 +81,66 @@ function buildDailyFlow(
 export function BalanceOverviewCard() {
   const formatCurrency = useFormatCurrency()
   const { data: accounts, isLoading: accountsLoading } = useAccounts()
-  const last7Days = getLastNDaysRange(7)
+  const [range, setRange] = useState("7d")
+  const option = RANGE_OPTIONS.find((o) => o.value === range) ?? RANGE_OPTIONS[0]
+  const isMonthly = option.months > 0
   const { data: recentTransactions, isLoading: transactionsLoading } =
-    useTransactions({ ...last7Days, limit: 200 })
+    useTransactions({ ...getLastNDaysRange(option.days), limit: 200 })
+  const trend = useTransactionsTrend(option.months)
   const { data: currentMonth, isLoading: currentLoading } =
     useTransactionsSummary(getMonthRange(0))
   const { data: previousMonth, isLoading: previousLoading } =
     useTransactionsSummary(getMonthRange(1))
 
   const isLoading =
-    accountsLoading || transactionsLoading || currentLoading || previousLoading
+    accountsLoading ||
+    currentLoading ||
+    previousLoading ||
+    (isMonthly ? trend.isLoading : transactionsLoading)
 
   const balance = (accounts ?? []).reduce(
     (sum, account) => sum + Number(account.balance),
     0
   )
-  const dailyFlow = buildDailyFlow(recentTransactions?.data ?? [])
+  const chartData = isMonthly
+    ? trend.data.map((point) => ({
+        day: point.month,
+        income: point.income,
+        expenses: point.expense,
+      }))
+    : buildDailyFlow(recentTransactions?.data ?? [], option.days)
   const net = (currentMonth?.net ?? 0)
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base font-medium text-muted-foreground">
-          Balance overview
-        </CardTitle>
-        <p className="text-2xl font-semibold text-foreground">
-          {formatCurrency(balance)}
-        </p>
+      <CardHeader className="flex flex-row items-start justify-between gap-4">
+        <div className="space-y-1.5">
+          <CardTitle className="text-base font-medium text-muted-foreground">
+            Balance overview
+          </CardTitle>
+          <p className="text-2xl font-semibold text-foreground">
+            {formatCurrency(balance)}
+          </p>
+        </div>
+        <Select value={range} onValueChange={setRange}>
+          <SelectTrigger size="sm" aria-label="Chart range">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {RANGE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
         {isLoading ? (
           <Skeleton className="h-[220px] w-full" />
         ) : (
           <ChartContainer config={chartConfig} className="h-[220px] w-full">
-            <BarChart data={dailyFlow} barCategoryGap={24}>
+            <BarChart data={chartData} barCategoryGap={chartData.length > 7 ? 4 : 24}>
               <CartesianGrid vertical={false} stroke="var(--border)" />
               <XAxis
                 dataKey="day"
