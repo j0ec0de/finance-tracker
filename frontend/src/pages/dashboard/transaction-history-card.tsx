@@ -1,3 +1,4 @@
+import { useAccounts } from "@/hooks/use-accounts"
 import { useTransactions } from "@/hooks/use-transactions"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -8,6 +9,7 @@ import { cn } from "@/lib/utils"
 export function TransactionHistoryCard() {
   const { data, isLoading, isError, error } = useTransactions({ limit: 6 })
   const transactions = data?.data ?? []
+  const { data: accounts } = useAccounts()
 
   return (
     <Card>
@@ -63,7 +65,10 @@ export function TransactionHistoryCard() {
                     )}
                   >
                     {isIncome ? "+" : "-"}
-                    {formatCurrency(Number(transaction.amount))}
+                    {formatCurrency(
+                      Number(transaction.amount),
+                      accounts?.find((a) => a.id === transaction.accountId)?.currency
+                    )}
                   </span>
                 </li>
               )

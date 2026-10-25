@@ -18,7 +18,8 @@ import {
 } from "@/components/ui/chart"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getLastNDaysRange, getMonthRange } from "@/lib/date-range"
-import { calcDeltaPct, formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
+import { calcDeltaPct } from "@/lib/format"
 import { StatTile } from "@/pages/dashboard/stat-tile"
 
 const chartConfig = {
@@ -55,6 +56,7 @@ function buildDailyFlow(
 }
 
 export function BalanceOverviewCard() {
+  const formatCurrency = useFormatCurrency()
   const { data: accounts, isLoading: accountsLoading } = useAccounts()
   const last7Days = getLastNDaysRange(7)
   const { data: recentTransactions, isLoading: transactionsLoading } =

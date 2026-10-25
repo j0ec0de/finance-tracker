@@ -2,13 +2,14 @@ import { Target } from "lucide-react"
 
 import { useGoals } from "@/hooks/use-goals"
 import { ApiError } from "@/lib/api"
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 import { PagePlaceholder } from "@/components/layout/page-placeholder"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Meter } from "@/pages/dashboard/meter"
 
 export function GoalTrackerCard() {
+  const formatCurrency = useFormatCurrency()
   const { data: goals, isLoading, isError, error } = useGoals()
 
   return (

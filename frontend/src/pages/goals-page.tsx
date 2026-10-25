@@ -6,7 +6,7 @@ import { useCreateGoalForm } from "@/hooks/use-create-goal-form"
 import { useEditGoalForm } from "@/hooks/use-edit-goal-form"
 import { ApiError } from "@/lib/api"
 import type { Goal } from "@/lib/goals"
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 import { PagePlaceholder } from "@/components/layout/page-placeholder"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -219,6 +219,7 @@ function EditGoalDialog({
 }
 
 export default function GoalsPage() {
+  const formatCurrency = useFormatCurrency()
   const { data: goals, isLoading, isError, error } = useGoals()
   const deleteGoal = useDeleteGoal()
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)

@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ApiError } from "@/lib/api"
 import { getMonthRange } from "@/lib/date-range"
-import { calcDeltaPct, formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
+import { calcDeltaPct } from "@/lib/format"
 
 const RADIUS = 54
 const STROKE = 10
 const CIRCUMFERENCE = Math.PI * RADIUS
 
 export function FinancialHealthCard() {
+  const formatCurrency = useFormatCurrency()
   const { data: currentMonth, isLoading: currentLoading, isError, error } =
     useTransactionsSummary(getMonthRange(0))
   const { data: previousMonth, isLoading: previousLoading } =

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ApiError } from "@/lib/api"
 import { getMonthRange } from "@/lib/date-range"
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -15,6 +15,7 @@ const CHART_COLORS = [
 ]
 
 export function CostAnalysisCard() {
+  const formatCurrency = useFormatCurrency()
   const { data, isLoading, isError, error } = useTransactionsByCategory(
     getMonthRange(0)
   )

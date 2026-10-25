@@ -7,7 +7,7 @@ import { useCreateBudgetForm } from "@/hooks/use-create-budget-form"
 import { useEditBudgetForm } from "@/hooks/use-edit-budget-form"
 import { ApiError } from "@/lib/api"
 import type { Budget, BudgetPeriod } from "@/lib/budgets"
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 import { PagePlaceholder } from "@/components/layout/page-placeholder"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -184,6 +184,7 @@ function EditBudgetDialog({
 }
 
 export default function BudgetsPage() {
+  const formatCurrency = useFormatCurrency()
   const { data: budgets, isLoading, isError, error } = useBudgets()
   const { data: categories } = useCategories()
   const deleteBudget = useDeleteBudget()

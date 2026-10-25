@@ -1,11 +1,12 @@
 import { useBudgets } from "@/hooks/use-budgets"
 import { ApiError } from "@/lib/api"
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Meter } from "@/pages/dashboard/meter"
 
 export function SpendingLimitCard() {
+  const formatCurrency = useFormatCurrency()
   const { data: budgets, isLoading, isError, error } = useBudgets()
 
   const monthlyBudgets = (budgets ?? []).filter((b) => b.period === "monthly")

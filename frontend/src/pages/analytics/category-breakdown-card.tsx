@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useTransactionsByCategory } from "@/hooks/use-transactions"
 import { ApiError } from "@/lib/api"
 import { getLastNMonthsRange } from "@/lib/date-range"
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 
 const CHART_COLORS = [
   "var(--chart-1)",
@@ -27,6 +27,7 @@ type CategoryBreakdownCardProps = {
 }
 
 export function CategoryBreakdownCard({ months }: CategoryBreakdownCardProps) {
+  const formatCurrency = useFormatCurrency()
   const { data, isLoading, isError, error } = useTransactionsByCategory(
     getLastNMonthsRange(months)
   )

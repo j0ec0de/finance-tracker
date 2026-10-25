@@ -1,6 +1,6 @@
 import { TrendingDown, TrendingUp } from "lucide-react"
 
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 import { cn } from "@/lib/utils"
 
 type StatTileProps = {
@@ -16,6 +16,7 @@ export function StatTile({
   deltaPct,
   comparisonLabel = "from last month",
 }: StatTileProps) {
+  const formatCurrency = useFormatCurrency()
   const isUp = deltaPct >= 0
 
   return (

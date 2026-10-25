@@ -12,7 +12,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { useTransactionsTrend } from "@/hooks/use-transactions"
 import { ApiError } from "@/lib/api"
-import { formatCurrency } from "@/lib/format"
+import { useFormatCurrency } from "@/hooks/use-display-currency"
 
 const chartConfig = {
   income: { label: "Income", color: "var(--chart-1)" },
@@ -24,6 +24,7 @@ type IncomeExpenseTrendCardProps = {
 }
 
 export function IncomeExpenseTrendCard({ months }: IncomeExpenseTrendCardProps) {
+  const formatCurrency = useFormatCurrency()
   const { data, isLoading, isError, error } = useTransactionsTrend(months)
   const hasActivity = data.some((point) => point.income > 0 || point.expense > 0)
 
