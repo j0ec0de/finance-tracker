@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "@/hooks/use-auth"
@@ -24,6 +25,7 @@ export function useCreateGoal() {
     mutationFn: (input: CreateGoalInput) => goalsApi.createGoal(token!, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: goalsKey })
+      toast.success("Goal created")
     },
   })
 }
@@ -37,6 +39,7 @@ export function useUpdateGoal() {
       goalsApi.updateGoal(token!, id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: goalsKey })
+      toast.success("Goal updated")
     },
   })
 }
@@ -49,6 +52,7 @@ export function useDeleteGoal() {
     mutationFn: (id: number) => goalsApi.deleteGoal(token!, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: goalsKey })
+      toast.success("Goal deleted")
     },
   })
 }

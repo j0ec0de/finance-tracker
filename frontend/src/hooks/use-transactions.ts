@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import {
   useMutation,
   useQueries,
@@ -89,7 +90,10 @@ export function useCreateTransaction() {
   return useMutation({
     mutationFn: (input: CreateTransactionInput) =>
       transactionsApi.createTransaction(token!, input),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      toast.success("Transaction created")
+    },
   })
 }
 
@@ -100,7 +104,10 @@ export function useUpdateTransaction() {
   return useMutation({
     mutationFn: ({ id, input }: { id: number; input: UpdateTransactionInput }) =>
       transactionsApi.updateTransaction(token!, id, input),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      toast.success("Transaction updated")
+    },
   })
 }
 
@@ -110,6 +117,9 @@ export function useDeleteTransaction() {
 
   return useMutation({
     mutationFn: (id: number) => transactionsApi.deleteTransaction(token!, id),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      toast.success("Transaction deleted")
+    },
   })
 }

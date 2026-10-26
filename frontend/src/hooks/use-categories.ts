@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "@/hooks/use-auth"
@@ -25,6 +26,7 @@ export function useCreateCategory() {
       categoriesApi.createCategory(token!, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoriesKey })
+      toast.success("Category created")
     },
   })
 }
@@ -38,6 +40,7 @@ export function useUpdateCategory() {
       categoriesApi.updateCategory(token!, id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoriesKey })
+      toast.success("Category updated")
     },
   })
 }
@@ -50,6 +53,7 @@ export function useDeleteCategory() {
     mutationFn: (id: number) => categoriesApi.deleteCategory(token!, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: categoriesKey })
+      toast.success("Category deleted")
     },
   })
 }

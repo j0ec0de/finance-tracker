@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 import { accountsKey } from "@/hooks/use-accounts"
@@ -14,6 +15,7 @@ export function useCreateTransfer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] })
       queryClient.invalidateQueries({ queryKey: accountsKey })
+      toast.success("Transfer created")
     },
   })
 }

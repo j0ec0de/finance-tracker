@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "@/hooks/use-auth"
@@ -25,6 +26,7 @@ export function useCreateBudget() {
       budgetsApi.createBudget(token!, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: budgetsKey })
+      toast.success("Budget created")
     },
   })
 }
@@ -38,6 +40,7 @@ export function useUpdateBudget() {
       budgetsApi.updateBudget(token!, id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: budgetsKey })
+      toast.success("Budget updated")
     },
   })
 }
@@ -50,6 +53,7 @@ export function useDeleteBudget() {
     mutationFn: (id: number) => budgetsApi.deleteBudget(token!, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: budgetsKey })
+      toast.success("Budget deleted")
     },
   })
 }

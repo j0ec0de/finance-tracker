@@ -1,3 +1,4 @@
+import { toast } from "sonner"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 
 import { useAuth } from "@/hooks/use-auth"
@@ -25,6 +26,7 @@ export function useCreateAccount() {
       accountsApi.createAccount(token!, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountsKey })
+      toast.success("Account created")
     },
   })
 }
@@ -38,6 +40,7 @@ export function useUpdateAccount() {
       accountsApi.updateAccount(token!, id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountsKey })
+      toast.success("Account updated")
     },
   })
 }
@@ -50,6 +53,7 @@ export function useDeleteAccount() {
     mutationFn: (id: number) => accountsApi.deleteAccount(token!, id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: accountsKey })
+      toast.success("Account deleted")
     },
   })
 }
