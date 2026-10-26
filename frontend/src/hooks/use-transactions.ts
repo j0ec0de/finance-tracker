@@ -1,6 +1,7 @@
 import { toast } from "sonner"
 import {
   useMutation,
+  keepPreviousData,
   useQueries,
   useQuery,
   useQueryClient,
@@ -27,6 +28,8 @@ export function useTransactions(params: ListTransactionsParams) {
     queryKey: transactionsKey(params),
     queryFn: () => transactionsApi.listTransactions(token!, params),
     enabled: !!token,
+    staleTime: 60_000,
+    placeholderData: keepPreviousData,
   })
 }
 
