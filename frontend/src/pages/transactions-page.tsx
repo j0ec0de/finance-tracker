@@ -1,21 +1,24 @@
-import { useState } from "react"
-import { ArrowLeftRight, Pencil, Plus, Trash2 } from "lucide-react"
+import { useState } from "react";
+import { ArrowLeftRight, Pencil, Plus, Trash2 } from "lucide-react";
 
-import { useAccounts } from "@/hooks/use-accounts"
-import { useCategories } from "@/hooks/use-categories"
-import { useCreateTransactionForm } from "@/hooks/use-create-transaction-form"
-import { useCreateTransferForm } from "@/hooks/use-create-transfer-form"
-import { useEditTransactionForm } from "@/hooks/use-edit-transaction-form"
-import { useDeleteTransaction, useTransactions } from "@/hooks/use-transactions"
-import type { Account } from "@/lib/accounts"
-import { ApiError } from "@/lib/api"
-import type { Category } from "@/lib/categories"
-import { formatCurrency } from "@/lib/format"
-import type { Transaction, TransactionType } from "@/lib/transactions"
-import { PagePlaceholder } from "@/components/layout/page-placeholder"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAccounts } from "@/hooks/use-accounts";
+import { useCategories } from "@/hooks/use-categories";
+import { useCreateTransactionForm } from "@/hooks/use-create-transaction-form";
+import { useCreateTransferForm } from "@/hooks/use-create-transfer-form";
+import { useEditTransactionForm } from "@/hooks/use-edit-transaction-form";
+import {
+  useDeleteTransaction,
+  useTransactions,
+} from "@/hooks/use-transactions";
+import type { Account } from "@/lib/accounts";
+import { ApiError } from "@/lib/api";
+import type { Category } from "@/lib/categories";
+import { formatCurrency } from "@/lib/format";
+import type { Transaction, TransactionType } from "@/lib/transactions";
+import { PagePlaceholder } from "@/components/layout/page-placeholder";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -24,17 +27,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
-import { Skeleton } from "@/components/ui/skeleton"
+} from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -42,14 +45,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 
-const PAGE_SIZE = 20
+const PAGE_SIZE = 20;
 
 const typeLabels: Record<TransactionType, string> = {
   expense: "Expense",
   income: "Income",
-}
+};
 
 function AccountCategoryFields({
   accounts,
@@ -60,15 +63,15 @@ function AccountCategoryFields({
   setCategoryId,
   type,
 }: {
-  accounts: Account[]
-  categories: Category[]
-  accountId: string
-  setAccountId: (v: string) => void
-  categoryId: string
-  setCategoryId: (v: string) => void
-  type: TransactionType
+  accounts: Account[];
+  categories: Category[];
+  accountId: string;
+  setAccountId: (v: string) => void;
+  categoryId: string;
+  setCategoryId: (v: string) => void;
+  type: TransactionType;
 }) {
-  const matchingCategories = categories.filter((c) => c.type === type)
+  const matchingCategories = categories.filter((c) => c.type === type);
 
   return (
     <div className="grid grid-cols-2 gap-4">
@@ -104,17 +107,17 @@ function AccountCategoryFields({
         </Select>
       </div>
     </div>
-  )
+  );
 }
 
 function AddTransactionDialog({
   accounts,
   categories,
 }: {
-  accounts: Account[]
-  categories: Category[]
+  accounts: Account[];
+  categories: Category[];
 }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const {
     accountId,
     setAccountId,
@@ -131,7 +134,7 @@ function AddTransactionDialog({
     error,
     isSubmitting,
     handleSubmit,
-  } = useCreateTransactionForm(accounts[0]?.id, () => setOpen(false))
+  } = useCreateTransactionForm(accounts[0]?.id, () => setOpen(false));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -151,7 +154,10 @@ function AddTransactionDialog({
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="transaction-type">Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as TransactionType)}>
+            <Select
+              value={type}
+              onValueChange={(v) => setType(v as TransactionType)}
+            >
               <SelectTrigger id="transaction-type" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -218,11 +224,11 @@ function AddTransactionDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function TransferDialog({ accounts }: { accounts: Account[] }) {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
   const {
     fromAccountId,
     setFromAccountId,
@@ -237,7 +243,7 @@ function TransferDialog({ accounts }: { accounts: Account[] }) {
     error,
     isSubmitting,
     handleSubmit,
-  } = useCreateTransferForm(accounts[0]?.id, () => setOpen(false))
+  } = useCreateTransferForm(accounts[0]?.id, () => setOpen(false));
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -251,7 +257,8 @@ function TransferDialog({ accounts }: { accounts: Account[] }) {
         <DialogHeader>
           <DialogTitle>Transfer between accounts</DialogTitle>
           <DialogDescription>
-            Moves money from one of your accounts to another and keeps both balances in sync.
+            Moves money from one of your accounts to another and keeps both
+            balances in sync.
           </DialogDescription>
         </DialogHeader>
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
@@ -338,7 +345,7 @@ function TransferDialog({ accounts }: { accounts: Account[] }) {
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 function EditTransactionDialog({
@@ -348,11 +355,11 @@ function EditTransactionDialog({
   open,
   onOpenChange,
 }: {
-  transaction: Transaction
-  accounts: Account[]
-  categories: Category[]
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  transaction: Transaction;
+  accounts: Account[];
+  categories: Category[];
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }) {
   const {
     accountId,
@@ -370,7 +377,7 @@ function EditTransactionDialog({
     error,
     isSubmitting,
     handleSubmit,
-  } = useEditTransactionForm(transaction, () => onOpenChange(false))
+  } = useEditTransactionForm(transaction, () => onOpenChange(false));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -384,7 +391,10 @@ function EditTransactionDialog({
         <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="edit-transaction-type">Type</Label>
-            <Select value={type} onValueChange={(v) => setType(v as TransactionType)}>
+            <Select
+              value={type}
+              onValueChange={(v) => setType(v as TransactionType)}
+            >
               <SelectTrigger id="edit-transaction-type" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -451,16 +461,16 @@ function EditTransactionDialog({
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 export default function TransactionsPage() {
-  const [offset, setOffset] = useState(0)
-  const [accountFilter, setAccountFilter] = useState("all")
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [offset, setOffset] = useState(0);
+  const [accountFilter, setAccountFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
 
-  const { data: accounts, isLoading: accountsLoading } = useAccounts()
-  const { data: categories } = useCategories()
+  const { data: accounts, isLoading: accountsLoading } = useAccounts();
+  const { data: categories } = useCategories();
 
   const {
     data: result,
@@ -472,32 +482,33 @@ export default function TransactionsPage() {
     offset,
     accountId: accountFilter === "all" ? undefined : Number(accountFilter),
     type: typeFilter === "all" ? undefined : (typeFilter as TransactionType),
-  })
+  });
 
-  const deleteTransaction = useDeleteTransaction()
-  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
+  const deleteTransaction = useDeleteTransaction();
+  const [editingTransaction, setEditingTransaction] =
+    useState<Transaction | null>(null);
 
-  const accountsById = new Map((accounts ?? []).map((a) => [a.id, a]))
-  const categoriesById = new Map((categories ?? []).map((c) => [c.id, c]))
+  const accountsById = new Map((accounts ?? []).map((a) => [a.id, a]));
+  const categoriesById = new Map((categories ?? []).map((c) => [c.id, c]));
 
-  const hasFilters = accountFilter !== "all" || typeFilter !== "all"
-  const total = result?.total ?? 0
-  const rangeStart = total === 0 ? 0 : offset + 1
-  const rangeEnd = Math.min(offset + PAGE_SIZE, total)
+  const hasFilters = accountFilter !== "all" || typeFilter !== "all";
+  const total = result?.total ?? 0;
+  const rangeStart = total === 0 ? 0 : offset + 1;
+  const rangeEnd = Math.min(offset + PAGE_SIZE, total);
 
   function updateAccountFilter(value: string) {
-    setAccountFilter(value)
-    setOffset(0)
+    setAccountFilter(value);
+    setOffset(0);
   }
 
   function updateTypeFilter(value: string) {
-    setTypeFilter(value)
-    setOffset(0)
+    setTypeFilter(value);
+    setOffset(0);
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-4">
-      <Card>
+    <div className="flex min-h-0 flex-1 flex-col gap-4 p-4">
+      <Card className="min-h-96 flex-1 overflow-hidden">
         <CardHeader className="flex-row items-center justify-between gap-4">
           <CardTitle>Transactions</CardTitle>
           <div className="flex items-center gap-2">
@@ -535,7 +546,7 @@ export default function TransactionsPage() {
             )}
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex min-h-0 flex-1 flex-col">
           {isLoading ? (
             <div className="flex flex-col gap-2">
               <Skeleton className="h-9 w-full" />
@@ -550,97 +561,110 @@ export default function TransactionsPage() {
             </p>
           ) : result && result.data.length > 0 ? (
             <>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Account</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="w-0" />
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {result.data.map((transaction) => {
-                    const account = accountsById.get(transaction.accountId)
-                    const category = transaction.categoryId
-                      ? categoriesById.get(transaction.categoryId)
-                      : undefined
+              <div className="min-h-0 flex-1 overflow-auto [&_[data-slot=table-container]]:overflow-visible">
+                <Table>
+                  <TableHeader className="sticky top-0 z-10 bg-card">
+                    <TableRow>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Account</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead className="text-right">Amount</TableHead>
+                      <TableHead className="w-0" />
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {result.data.map((transaction) => {
+                      const account = accountsById.get(transaction.accountId);
+                      const category = transaction.categoryId
+                        ? categoriesById.get(transaction.categoryId)
+                        : undefined;
 
-                    return (
-                      <TableRow key={transaction.id}>
-                        <TableCell>
-                          {new Date(transaction.occurredAt).toLocaleDateString()}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {transaction.description || (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>{account?.name ?? "—"}</TableCell>
-                        <TableCell>
-                          {transaction.transferGroupId ? (
-                            <Badge variant="outline">
-                              <ArrowLeftRight data-icon="inline-start" />
-                              Transfer
+                      return (
+                        <TableRow key={transaction.id}>
+                          <TableCell>
+                            {new Date(
+                              transaction.occurredAt,
+                            ).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {transaction.description || (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>{account?.name ?? "—"}</TableCell>
+                          <TableCell>
+                            {transaction.transferGroupId ? (
+                              <Badge variant="outline">
+                                <ArrowLeftRight data-icon="inline-start" />
+                                Transfer
+                              </Badge>
+                            ) : category ? (
+                              <Badge variant="secondary">{category.name}</Badge>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={
+                                transaction.type === "income"
+                                  ? "default"
+                                  : "secondary"
+                              }
+                            >
+                              {typeLabels[transaction.type]}
                             </Badge>
-                          ) : category ? (
-                            <Badge variant="secondary">{category.name}</Badge>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant={
-                              transaction.type === "income" ? "default" : "secondary"
+                          </TableCell>
+                          <TableCell
+                            className={
+                              "text-right " +
+                              (transaction.type === "income"
+                                ? "text-emerald-600 dark:text-emerald-400"
+                                : "")
                             }
                           >
-                            {typeLabels[transaction.type]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell
-                          className={
-                            "text-right " +
-                            (transaction.type === "income"
-                              ? "text-emerald-600 dark:text-emerald-400"
-                              : "")
-                          }
-                        >
-                          {transaction.type === "income" ? "+" : "-"}
-                          {formatCurrency(Number(transaction.amount), account?.currency)}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex justify-end gap-1">
-                            {!transaction.transferGroupId && (
+                            {transaction.type === "income" ? "+" : "-"}
+                            {formatCurrency(
+                              Number(transaction.amount),
+                              account?.currency,
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex justify-end gap-1">
+                              {!transaction.transferGroupId && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon-sm"
+                                  aria-label="Edit transaction"
+                                  onClick={() =>
+                                    setEditingTransaction(transaction)
+                                  }
+                                >
+                                  <Pencil />
+                                </Button>
+                              )}
                               <Button
                                 variant="ghost"
                                 size="icon-sm"
-                                aria-label="Edit transaction"
-                                onClick={() => setEditingTransaction(transaction)}
+                                aria-label="Delete transaction"
+                                disabled={deleteTransaction.isPending}
+                                onClick={() =>
+                                  deleteTransaction.mutate(transaction.id)
+                                }
                               >
-                                <Pencil />
+                                <Trash2 className="text-destructive" />
                               </Button>
-                            )}
-                            <Button
-                              variant="ghost"
-                              size="icon-sm"
-                              aria-label="Delete transaction"
-                              disabled={deleteTransaction.isPending}
-                              onClick={() => deleteTransaction.mutate(transaction.id)}
-                            >
-                              <Trash2 className="text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    )
-                  })}
-                </TableBody>
-              </Table>
-              <div className="flex items-center justify-between pt-4">
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex shrink-0 items-center justify-between pt-4">
                 <p className="text-sm text-muted-foreground">
                   {rangeStart}–{rangeEnd} of {total}
                 </p>
@@ -667,7 +691,9 @@ export default function TransactionsPage() {
           ) : (
             <PagePlaceholder
               icon={ArrowLeftRight}
-              title={hasFilters ? "No matching transactions" : "No transactions yet"}
+              title={
+                hasFilters ? "No matching transactions" : "No transactions yet"
+              }
               description={
                 hasFilters
                   ? "Try a different account or type filter."
@@ -690,5 +716,5 @@ export default function TransactionsPage() {
         />
       )}
     </div>
-  )
+  );
 }
