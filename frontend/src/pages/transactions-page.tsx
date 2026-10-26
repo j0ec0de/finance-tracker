@@ -47,7 +47,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 8;
 
 const typeLabels: Record<TransactionType, string> = {
   expense: "Expense",
@@ -561,9 +561,9 @@ export default function TransactionsPage() {
             </p>
           ) : result && result.data.length > 0 ? (
             <>
-              <div className="min-h-0 flex-1 overflow-auto [&_[data-slot=table-container]]:overflow-visible">
+              <div className="min-h-0 flex-1">
                 <Table>
-                  <TableHeader className="sticky top-0 z-10 bg-card">
+                  <TableHeader>
                     <TableRow>
                       <TableHead>Date</TableHead>
                       <TableHead>Description</TableHead>

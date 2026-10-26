@@ -231,10 +231,21 @@ function EditAccountDialog({
   )
 }
 
+const PAGE_SIZE = 8
+
 export default function AccountsPage() {
   const { data: accounts, isLoading, isError, error } = useAccounts()
   const deleteAccount = useDeleteAccount()
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
+  const [page, setPage] = useState(0)
+
+  const total = accounts?.length ?? 0
+  const maxPage = Math.max(0, Math.ceil(total / PAGE_SIZE) - 1)
+  const currentPage = Math.min(page, maxPage)
+  const pageStart = currentPage * PAGE_SIZE
+  const visibleAccounts = (accounts ?? []).slice(pageStart, pageStart + PAGE_SIZE)
+  const rangeStart = total === 0 ? 0 : pageStart + 1
+  const rangeEnd = Math.min(pageStart + PAGE_SIZE, total)
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4">
@@ -257,6 +268,7 @@ export default function AccountsPage() {
                 : "Couldn't load accounts. Please try again."}
             </p>
           ) : accounts && accounts.length > 0 ? (
+            <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -267,7 +279,7 @@ export default function AccountsPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {accounts.map((account) => (
+                {visibleAccounts.map((account) => (
                   <TableRow key={account.id}>
                     <TableCell className="font-medium">{account.name}</TableCell>
                     <TableCell>
@@ -303,6 +315,32 @@ export default function AccountsPage() {
                 ))}
               </TableBody>
             </Table>
+            {total > PAGE_SIZE && (
+              <div className="flex items-center justify-between pt-4">
+                <p className="text-sm text-muted-foreground">
+                  {rangeStart}–{rangeEnd} of {total}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 0}
+                    onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pageStart + PAGE_SIZE >= total}
+                    onClick={() => setPage((p) => Math.min(maxPage, p + 1))}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+            </>
           ) : (
             <PagePlaceholder
               icon={Wallet}

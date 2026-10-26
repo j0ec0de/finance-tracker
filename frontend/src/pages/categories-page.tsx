@@ -46,7 +46,7 @@ const categoryTypeLabels: Record<CategoryType, string> = {
   income: "Income",
 }
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 8
 
 function AddCategoryDialog() {
   const [open, setOpen] = useState(false)
