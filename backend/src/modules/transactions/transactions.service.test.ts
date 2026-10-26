@@ -4,7 +4,14 @@ import { db } from '../../db/index.js';
 import { accounts } from '../../db/schema.js';
 import { ConflictError } from '../../utils/app-error.js';
 import { createTestAccount, createTestCategory, createTestUser, deleteTestUser } from '../../test/helpers.js';
-import { createTransaction, deleteTransaction, updateTransaction } from './transactions.service.js';
+import { createTransfer } from '../transfers/transfers.service.js';
+import {
+  createTransaction,
+  deleteTransaction,
+  getTransactionsByCategory,
+  getTransactionsSummary,
+  updateTransaction,
+} from './transactions.service.js';
 
 const getBalance = async (accountId: number) => {
   const [account] = await db.select().from(accounts).where(eq(accounts.id, accountId));
@@ -102,6 +109,19 @@ describe('transaction balance logic', () => {
 
       await deleteTransaction(userId, transaction!.id);
       expect(await getBalance(account.id)).toBe(100);
+    });
+  });
+
+  describe('summaries', () => {
+    it('excludes transfer legs from income, expense and category totals', async () => {
+      const salary = await createTestAccount(userId, 0);
+      const savings = await createTestAccount(userId, 0);
+      await createTransaction(userId, { accountId: salary.id, type: 'income', amount: 19000 });
+      await createTransfer(userId, { fromAccountId: salary.id, toAccountId: savings.id, amount: 3000 });
+
+      expect(await getTransactionsSummary(userId, {})).toEqual({ income: 19000, expense: 0, net: 19000 });
+      const byCategory = await getTransactionsByCategory(userId, {});
+      expect(byCategory.reduce((sum, row) => sum + row.total, 0)).toBe(19000);
     });
   });
 });

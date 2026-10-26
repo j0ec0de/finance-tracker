@@ -1,4 +1,4 @@
-import { and, count, desc, eq, gte, lte, sql, SQL } from 'drizzle-orm';
+import { and, count, desc, eq, gte, isNull, lte, sql, SQL } from 'drizzle-orm';
 import { db } from '../../db/index.js';
 import { categories, transactions } from '../../db/schema.js';
 import { adjustAccountBalance, assertAccountOwned } from '../accounts/accounts.service.js';
@@ -23,8 +23,9 @@ const listFilterWhere = (userId: number, filters: ListTransactionsQuery): SQL | 
   return and(...conditions);
 };
 
+// Transfer legs are excluded: moving money between own accounts is neither income nor spending.
 const dateRangeWhere = (userId: number, filters: SummaryQuery): SQL | undefined => {
-  const conditions = [eq(transactions.userId, userId)];
+  const conditions = [eq(transactions.userId, userId), isNull(transactions.transferGroupId)];
   if (filters.startDate !== undefined) conditions.push(gte(transactions.occurredAt, filters.startDate));
   if (filters.endDate !== undefined) conditions.push(lte(transactions.occurredAt, filters.endDate));
   return and(...conditions);

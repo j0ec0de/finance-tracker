@@ -49,7 +49,12 @@ const RANGE_OPTIONS = [
 const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
 function buildDailyFlow(
-  transactions: { type: "income" | "expense"; amount: string; occurredAt: string }[],
+  transactions: {
+    type: "income" | "expense"
+    amount: string
+    occurredAt: string
+    transferGroupId: string | null
+  }[],
   dayCount: number
 ) {
   const days = Array.from({ length: dayCount }, (_, i) => {
@@ -67,6 +72,7 @@ function buildDailyFlow(
   })
 
   for (const transaction of transactions) {
+    if (transaction.transferGroupId !== null) continue
     const key = new Date(transaction.occurredAt).toDateString()
     const bucket = days.find((d) => d.key === key)
     if (!bucket) continue
