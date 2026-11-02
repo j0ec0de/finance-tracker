@@ -9,6 +9,7 @@ import CategoriesPage from "@/pages/categories-page"
 import DashboardPage from "@/pages/dashboard-page"
 import GoalsPage from "@/pages/goals-page"
 import LoginPage from "@/pages/login-page"
+import PlannerPage from "@/pages/planner-page"
 import RegisterPage from "@/pages/register-page"
 import TransactionsPage from "@/pages/transactions-page"
 
@@ -25,6 +26,7 @@ function App() {
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="budgets" element={<BudgetsPage />} />
           <Route path="goals" element={<GoalsPage />} />
+          <Route path="planner" element={<PlannerPage />} />
           <Route path="analytics" element={<AnalyticsPage />} />
         </Route>
       </Route>

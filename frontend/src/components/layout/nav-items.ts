@@ -1,5 +1,6 @@
 import {
   ArrowLeftRight,
+  Calculator,
   LayoutDashboard,
   LineChart,
   PiggyBank,
@@ -22,5 +23,6 @@ export const navItems: NavItem[] = [
   { title: "Categories", url: "/categories", icon: Tags },
   { title: "Budgets", url: "/budgets", icon: PiggyBank },
   { title: "Goals", url: "/goals", icon: Target },
+  { title: "Planner", url: "/planner", icon: Calculator },
   { title: "Analytics", url: "/analytics", icon: LineChart },
 ]
